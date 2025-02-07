@@ -1,14 +1,14 @@
 import React from "react";
 import "./App.css";
-import {Conatainer} from "sementic-ui-react";
+import { Container } from "semantic-ui-react";
 import ToDoList from "./To-do-lists";
 
-function App(){
-  return(
-    <div>
-      <container>
-        <ToDoList/>
-      </container>
-    </div>
-  )
+function App() {
+  return (
+    <Container>
+      <ToDoList />
+    </Container>
+  );
 }
+
+export default App;
