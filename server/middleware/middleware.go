@@ -5,14 +5,16 @@ import (
     "net/http"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models"
     "github.com/gorilla/mux"
-    "github.com/google/uuid"
 )
-
-var todos []models.Todo
 
 // Get all todos
 func GetTodos(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
+    todos, err := models.GetTodos()
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
     json.NewEncoder(w).Encode(todos)
 }
 
@@ -21,52 +23,48 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     var todo models.Todo
     _ = json.NewDecoder(r.Body).Decode(&todo)
-    todo.ID = uuid.New().String()
-    todos = append(todos, todo)
-    json.NewEncoder(w).Encode(todo)
+    createdTodo, err := models.CreateTodo(todo.Task)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(createdTodo)
 }
 
 // Update an existing todo
 func UpdateTodo(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     params := mux.Vars(r)
-    for index, item := range todos {
-        if item.ID == params["id"] {
-            todos = append(todos[:index], todos[index+1:]...)
-            var todo models.Todo
-            _ = json.NewDecoder(r.Body).Decode(&todo)
-            todo.ID = params["id"]
-            todos = append(todos, todo)
-            json.NewEncoder(w).Encode(todo)
-            return
-        }
+    var todo models.Todo
+    _ = json.NewDecoder(r.Body).Decode(&todo)
+    updatedTodo, err := models.UpdateTodo(params["id"], todo.Task, todo.Done)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
     }
-    json.NewEncoder(w).Encode(todos)
+    json.NewEncoder(w).Encode(updatedTodo)
 }
 
 // Delete a todo
 func DeleteTodo(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     params := mux.Vars(r)
-    for index, item := range todos {
-        if item.ID == params["id"] {
-            todos = append(todos[:index], todos[index+1:]...)
-            break
-        }
+    err := models.DeleteTodo(params["id"])
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
     }
-    json.NewEncoder(w).Encode(todos)
+    json.NewEncoder(w).Encode(map[string]string{"result": "success"})
 }
 
 // Undo a todo
 func UndoTodo(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     params := mux.Vars(r)
-    for index, item := range todos {
-        if item.ID == params["id"] {
-            todos[index].Done = false
-            json.NewEncoder(w).Encode(todos[index])
-            return
-        }
+    undoneTodo, err := models.UndoTodo(params["id"])
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
     }
-    json.NewEncoder(w).Encode(todos)
+    json.NewEncoder(w).Encode(undoneTodo)
 }
