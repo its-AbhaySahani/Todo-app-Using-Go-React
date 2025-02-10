@@ -56,5 +56,10 @@ func UndoTodo(id string) (Todo, error) {
     if err != nil {
         return Todo{}, err
     }
-    return Todo{ID: id, Done: false}, nil
+    var todo Todo
+    err = database.DB.QueryRow("SELECT id, task, done FROM todos WHERE id = ?", id).Scan(&todo.ID, &todo.Task, &todo.Done)
+    if err != nil {
+        return Todo{}, err
+    }
+    return todo, nil
 }

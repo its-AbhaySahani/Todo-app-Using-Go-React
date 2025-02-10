@@ -114,7 +114,7 @@ class ToDoList extends Component {
         <div className="row">
           <Card.Group>
             {this.state.items.map((item) => (
-              <Card key={item.id}>
+              <Card key={item.id} color={item.done ? "green" : "red"}>
                 <Card.Content>
                   <Card.Header textAlign="left">
                     <div style={{ wordWrap: "break-word" }}>{item.task}</div>
