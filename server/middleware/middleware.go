@@ -10,7 +10,8 @@ import (
 // Get all todos
 func GetTodos(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
-    todos, err := models.GetTodos()
+    userID := r.Context().Value("userID").(string)
+    todos, err := models.GetTodos(userID)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -23,7 +24,8 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     var todo models.Todo
     _ = json.NewDecoder(r.Body).Decode(&todo)
-    createdTodo, err := models.CreateTodo(todo.Task)
+    userID := r.Context().Value("userID").(string)
+    createdTodo, err := models.CreateTodo(todo.Task, userID)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -37,7 +39,8 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
     params := mux.Vars(r)
     var todo models.Todo
     _ = json.NewDecoder(r.Body).Decode(&todo)
-    updatedTodo, err := models.UpdateTodo(params["id"], todo.Task, todo.Done)
+    userID := r.Context().Value("userID").(string)
+    updatedTodo, err := models.UpdateTodo(params["id"], todo.Task, todo.Done, userID)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -49,7 +52,8 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
 func DeleteTodo(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     params := mux.Vars(r)
-    err := models.DeleteTodo(params["id"])
+    userID := r.Context().Value("userID").(string)
+    err := models.DeleteTodo(params["id"], userID)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -61,7 +65,8 @@ func DeleteTodo(w http.ResponseWriter, r *http.Request) {
 func UndoTodo(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     params := mux.Vars(r)
-    undoneTodo, err := models.UndoTodo(params["id"])
+    userID := r.Context().Value("userID").(string)
+    undoneTodo, err := models.UndoTodo(params["id"], userID)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return

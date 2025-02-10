@@ -1,6 +1,7 @@
 package middleware
 
 import (
+    "context"
     "encoding/json"
     "net/http"
     "time"
@@ -8,7 +9,7 @@ import (
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models"
 )
 
-var jwtKey = []byte("my_secret_key")
+var jwtKey = []byte("ZLR+ZInOHXQst1seVlV6JVuZe1k3vasV1BRyqAHAyaY=")
 
 type Credentials struct {
     Username string `json:"username"`
@@ -17,6 +18,7 @@ type Credentials struct {
 
 type Claims struct {
     Username string `json:"username"`
+    UserID   string `json:"user_id"`
     jwt.StandardClaims
 }
 
@@ -60,6 +62,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
     expirationTime := time.Now().Add(24 * time.Hour)
     claims := &Claims{
         Username: creds.Username,
+        UserID:   user.ID,
         StandardClaims: jwt.StandardClaims{
             ExpiresAt: expirationTime.Unix(),
         },
@@ -113,6 +116,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
             return
         }
 
-        next.ServeHTTP(w, r)
+        ctx := context.WithValue(r.Context(), "userID", claims.UserID)
+        next.ServeHTTP(w, r.WithContext(ctx))
     })
 }
