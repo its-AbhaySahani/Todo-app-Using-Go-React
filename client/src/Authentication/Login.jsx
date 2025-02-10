@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const endpoint = "http://localhost:9000";
 
-function Login() {
+function Login({ setIsAuthenticated }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -17,6 +17,7 @@ function Login() {
         password,
       });
       localStorage.setItem("token", response.data.token);
+      setIsAuthenticated(true);
       alert("Login successful");
       navigate("/");
     } catch (error) {

@@ -86,17 +86,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func AuthMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        cookie, err := r.Cookie("token")
-        if err != nil {
-            if err == http.ErrNoCookie {
-                http.Error(w, "Unauthorized", http.StatusUnauthorized)
-                return
-            }
-            http.Error(w, "Bad request", http.StatusBadRequest)
+        authHeader := r.Header.Get("Authorization")
+        if authHeader == "" {
+            http.Error(w, "Unauthorized", http.StatusUnauthorized)
             return
         }
 
-        tokenStr := cookie.Value
+        tokenStr := authHeader[len("Bearer "):]
         claims := &Claims{}
 
         token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {

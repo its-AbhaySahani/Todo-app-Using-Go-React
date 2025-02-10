@@ -25,23 +25,40 @@ class ToDoList extends Component {
 
   onSubmit = (e) => {
     e.preventDefault();
+    const token = localStorage.getItem("token");
     if (this.state.task) {
       if (this.state.editTaskId) {
         axios
-          .put(`${endpoint}/api/todo/${this.state.editTaskId}`, {
-            task: this.state.task,
-            done: false,
-          })
+          .put(
+            `${endpoint}/api/todo/${this.state.editTaskId}`,
+            {
+              task: this.state.task,
+              done: false,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
           .then((res) => {
             this.getTasks();
             this.setState({ task: "", editTaskId: null });
           });
       } else {
         axios
-          .post(`${endpoint}/api/todo`, {
-            task: this.state.task,
-            done: false,
-          })
+          .post(
+            `${endpoint}/api/todo`,
+            {
+              task: this.state.task,
+              done: false,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
           .then((res) => {
             this.getTasks();
             this.setState({ task: "" });
@@ -51,34 +68,66 @@ class ToDoList extends Component {
   };
 
   getTasks = () => {
-    axios.get(`${endpoint}/api/todos`).then((res) => {
-      if (res.data) {
-        this.setState({ items: res.data });
-      }
-    });
+    const token = localStorage.getItem("token");
+    axios
+      .get(`${endpoint}/api/todos`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        if (res.data) {
+          this.setState({ items: res.data });
+        }
+      });
   };
 
   updateTask = (id) => {
+    const token = localStorage.getItem("token");
     axios
-      .put(`${endpoint}/api/todo/${id}`, {
-        done: true,
-      })
+      .put(
+        `${endpoint}/api/todo/${id}`,
+        {
+          done: true,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((res) => {
         this.getTasks();
       });
   };
 
   deleteTask = (id) => {
-    axios.delete(`${endpoint}/api/todo/${id}`).then((res) => {
-      this.getTasks();
-    });
+    const token = localStorage.getItem("token");
+    axios
+      .delete(`${endpoint}/api/todo/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        this.getTasks();
+      });
   };
 
   undoTask = (id) => {
+    const token = localStorage.getItem("token");
     axios
-      .put(`${endpoint}/api/todo/undo/${id}`, {
-        done: false,
-      })
+      .put(
+        `${endpoint}/api/todo/undo/${id}`,
+        {
+          done: false,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((res) => {
         this.getTasks();
       });
