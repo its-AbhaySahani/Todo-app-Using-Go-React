@@ -138,6 +138,8 @@ func GetSharedTodos(w http.ResponseWriter, r *http.Request) {
         return
     }
     sharedTodos, err := models.GetSharedTodos(userID)
+    fmt.Println("sharedTodos:", sharedTodos)
+    fmt.Println("err:", err)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
