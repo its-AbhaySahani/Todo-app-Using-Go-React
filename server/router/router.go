@@ -23,6 +23,8 @@ func Router() *mux.Router {
     apiRouter.HandleFunc("/todo/{id}", middleware.UpdateTodo).Methods("PUT")
     apiRouter.HandleFunc("/todo/{id}", middleware.DeleteTodo).Methods("DELETE")
     apiRouter.HandleFunc("/todo/undo/{id}", middleware.UndoTodo).Methods("PUT")
+    apiRouter.HandleFunc("/share", middleware.ShareTodo).Methods("POST")
+    apiRouter.HandleFunc("/shared", middleware.GetSharedTodos).Methods("GET")
 
     return router
 }

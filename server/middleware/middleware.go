@@ -2,6 +2,7 @@ package middleware
 
 import (
     "encoding/json"
+    "fmt"
     "net/http"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models"
     "github.com/gorilla/mux"
@@ -92,4 +93,54 @@ func UndoTodo(w http.ResponseWriter, r *http.Request) {
         return
     }
     json.NewEncoder(w).Encode(undoneTodo)
+}
+
+// Share a todo with another user
+func ShareTodo(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    var request struct {
+        TaskID   string `json:"taskId"`
+        Username string `json:"username"`
+    }
+    err := json.NewDecoder(r.Body).Decode(&request)
+    if err != nil {
+        fmt.Println("Error decoding request:", err)
+        http.Error(w, "Invalid request payload", http.StatusBadRequest)
+        return
+    }
+    fmt.Println("Share request:", request)
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    user, err := models.GetUserByUsername(request.Username)
+    if err != nil {
+        fmt.Println("Error fetching user:", err)
+        http.Error(w, "User not found", http.StatusNotFound)
+        return
+    }
+    err = models.ShareTodoWithUser(request.TaskID, user.ID, userID)
+    if err != nil {
+        fmt.Println("Error sharing task:", err)
+        http.Error(w, "Error sharing task", http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(map[string]string{"result": "success"})
+}
+
+// Get shared todos
+func GetSharedTodos(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    sharedTodos, err := models.GetSharedTodos(userID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(sharedTodos)
 }

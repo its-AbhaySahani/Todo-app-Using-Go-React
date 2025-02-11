@@ -15,6 +15,16 @@ type Todo struct {
     Time  string `json:"time"`
 }
 
+type SharedTodo struct {
+    ID       string `json:"id"`
+    Task     string `json:"task"`
+    Done     bool   `json:"done"`
+    UserID   string `json:"user_id"`
+    Date     string `json:"date"`
+    Time     string `json:"time"`
+    SharedBy string `json:"shared_by"`
+}
+
 func GetTodos(userID string) ([]Todo, error) {
     rows, err := database.DB.Query("SELECT id, task, done, date, time FROM todos WHERE user_id = ?", userID)
     if err != nil {
@@ -73,4 +83,27 @@ func UndoTodo(id string, userID string) (Todo, error) {
         return Todo{}, err
     }
     return todo, nil
+}
+
+func ShareTodoWithUser(taskID, userID, sharedBy string) error {
+    _, err := database.DB.Exec("INSERT INTO shared_todos (id, task, done, user_id, date, time, shared_by) SELECT id, task, done, ?, date, time, ? FROM todos WHERE id = ?", userID, sharedBy, taskID)
+    return err
+}
+
+func GetSharedTodos(userID string) ([]SharedTodo, error) {
+    rows, err := database.DB.Query("SELECT id, task, done, user_id, date, time, shared_by FROM shared_todos WHERE user_id = ?", userID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var sharedTodos []SharedTodo
+    for rows.Next() {
+        var sharedTodo SharedTodo
+        if err := rows.Scan(&sharedTodo.ID, &sharedTodo.Task, &sharedTodo.Done, &sharedTodo.UserID, &sharedTodo.Date, &sharedTodo.Time, &sharedTodo.SharedBy); err != nil {
+            return nil, err
+        }
+        sharedTodos = append(sharedTodos, sharedTodo)
+    }
+    return sharedTodos, nil
 }

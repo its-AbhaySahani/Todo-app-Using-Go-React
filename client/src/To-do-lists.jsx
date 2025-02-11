@@ -1,11 +1,13 @@
 import React, { Component } from "react";
 import axios from "axios";
-import { Card, Header, Form, Input, Icon, Button } from "semantic-ui-react";
+import { Card, Header, Form, Input, Button } from "semantic-ui-react";
 import { LocalizationProvider } from "@mui/lab";
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import DateTimePicker from "@mui/lab/DateTimePicker";
 import TextField from "@mui/material/TextField";
 import moment from "moment";
+import Box from "./Box";
+import { Link } from "react-router-dom";
 
 let endpoint = "http://localhost:9000";
 
@@ -192,44 +194,21 @@ class ToDoList extends Component {
         <div className="row">
           <Card.Group>
             {this.state.items.map((item) => (
-              <Card key={item.id} color={item.done ? "green" : "red"}>
-                <Card.Content>
-                  <Card.Header textAlign="left">
-                    <div style={{ wordWrap: "break-word" }}>{item.task}</div>
-                  </Card.Header>
-                  <Card.Meta textAlign="left">
-                    <span>{moment.utc(`${item.date} ${item.time}`).format("YYYY-MM-DD HH:mm:ss")}</span>
-                  </Card.Meta>
-                  <Card.Meta textAlign="right">
-                    <Icon
-                      name="edit"
-                      color="blue"
-                      onClick={() => this.editTask(item.id, item.task, item.date, item.time)}
-                    />
-                    <span style={{ paddingRight: 10 }}>Edit</span>
-                    <Icon
-                      name="check circle"
-                      color="green"
-                      onClick={() => this.updateTask(item.id)}
-                    />
-                    <span style={{ paddingRight: 10 }}>Done</span>
-                    <Icon
-                      name="undo"
-                      color="yellow"
-                      onClick={() => this.undoTask(item.id)}
-                    />
-                    <span style={{ paddingRight: 10 }}>Undo</span>
-                    <Icon
-                      name="delete"
-                      color="red"
-                      onClick={() => this.deleteTask(item.id)}
-                    />
-                    <span>Delete</span>
-                  </Card.Meta>
-                </Card.Content>
-              </Card>
+              <Box
+                key={item.id}
+                item={item}
+                editTask={this.editTask}
+                updateTask={this.updateTask}
+                undoTask={this.undoTask}
+                deleteTask={this.deleteTask}
+              />
             ))}
           </Card.Group>
+        </div>
+        <div className="row">
+          <Link to="/get-together">
+            <Button>Go to Shared Tasks</Button>
+          </Link>
         </div>
       </div>
     );

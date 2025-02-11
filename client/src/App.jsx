@@ -5,6 +5,7 @@ import { Container, Menu, Icon } from "semantic-ui-react";
 import ToDoList from "./To-do-lists";
 import Login from "./Authentication/Login";
 import Register from "./Authentication/Register";
+import GetTogether from "./Pages/GetTogether"; // Import GetTogether component
 
 function App() {
   return (
@@ -61,6 +62,7 @@ function AppContent() {
         <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<ToDoList />} />
+        <Route path="/get-together" element={<GetTogether />} /> {/* Add GetTogether route */}
       </Routes>
     </Container>
   );
