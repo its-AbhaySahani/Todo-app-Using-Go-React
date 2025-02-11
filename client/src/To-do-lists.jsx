@@ -1,6 +1,11 @@
 import React, { Component } from "react";
 import axios from "axios";
 import { Card, Header, Form, Input, Icon, Button } from "semantic-ui-react";
+import { LocalizationProvider } from "@mui/lab";
+import AdapterDateFns from "@mui/lab/AdapterDateFns";
+import DateTimePicker from "@mui/lab/DateTimePicker";
+import TextField from "@mui/material/TextField";
+import moment from "moment";
 
 let endpoint = "http://localhost:9000";
 
@@ -10,6 +15,7 @@ class ToDoList extends Component {
 
     this.state = {
       task: "",
+      dateTime: new Date(),
       items: [],
       editTaskId: null,
     };
@@ -23,9 +29,15 @@ class ToDoList extends Component {
     this.setState({ [e.target.name]: e.target.value });
   };
 
+  onDateTimeChange = (dateTime) => {
+    this.setState({ dateTime });
+  };
+
   onSubmit = (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
+    const formattedDate = moment.utc(this.state.dateTime).format("YYYY-MM-DD");
+    const formattedTime = moment.utc(this.state.dateTime).format("HH:mm:ss");
     if (this.state.task) {
       if (this.state.editTaskId) {
         axios
@@ -34,6 +46,8 @@ class ToDoList extends Component {
             {
               task: this.state.task,
               done: false,
+              date: formattedDate,
+              time: formattedTime,
             },
             {
               headers: {
@@ -41,9 +55,9 @@ class ToDoList extends Component {
               },
             }
           )
-          .then((res) => {
+          .then(() => {
             this.getTasks();
-            this.setState({ task: "", editTaskId: null });
+            this.setState({ task: "", editTaskId: null, dateTime: new Date() });
           });
       } else {
         axios
@@ -52,6 +66,8 @@ class ToDoList extends Component {
             {
               task: this.state.task,
               done: false,
+              date: formattedDate,
+              time: formattedTime,
             },
             {
               headers: {
@@ -59,9 +75,9 @@ class ToDoList extends Component {
               },
             }
           )
-          .then((res) => {
+          .then(() => {
             this.getTasks();
-            this.setState({ task: "" });
+            this.setState({ task: "", dateTime: new Date() });
           });
       }
     }
@@ -77,7 +93,12 @@ class ToDoList extends Component {
       })
       .then((res) => {
         if (res.data) {
-          this.setState({ items: res.data });
+          this.setState({
+            items: res.data.map((item) => ({
+              ...item,
+              dateTime: moment.utc(`${item.date} ${item.time}`).toDate(),
+            })),
+          });
         }
       });
   };
@@ -96,7 +117,7 @@ class ToDoList extends Component {
           },
         }
       )
-      .then((res) => {
+      .then(() => {
         this.getTasks();
       });
   };
@@ -109,7 +130,7 @@ class ToDoList extends Component {
           Authorization: `Bearer ${token}`,
         },
       })
-      .then((res) => {
+      .then(() => {
         this.getTasks();
       });
   };
@@ -128,13 +149,13 @@ class ToDoList extends Component {
           },
         }
       )
-      .then((res) => {
+      .then(() => {
         this.getTasks();
       });
   };
 
-  editTask = (id, task) => {
-    this.setState({ task, editTaskId: id });
+  editTask = (id, task, date, time) => {
+    this.setState({ task, editTaskId: id, dateTime: moment.utc(`${date} ${time}`).toDate() });
   };
 
   render() {
@@ -155,6 +176,14 @@ class ToDoList extends Component {
               fluid
               placeholder="Create Task"
             />
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DateTimePicker
+                label="Date & Time"
+                value={this.state.dateTime}
+                onChange={this.onDateTimeChange}
+                renderInput={(params) => <TextField {...params} />}
+              />
+            </LocalizationProvider>
             <Button type="submit">
               {this.state.editTaskId ? "Update Task" : "Add Task"}
             </Button>
@@ -168,12 +197,14 @@ class ToDoList extends Component {
                   <Card.Header textAlign="left">
                     <div style={{ wordWrap: "break-word" }}>{item.task}</div>
                   </Card.Header>
-
+                  <Card.Meta textAlign="left">
+                    <span>{moment.utc(`${item.date} ${item.time}`).format("YYYY-MM-DD HH:mm:ss")}</span>
+                  </Card.Meta>
                   <Card.Meta textAlign="right">
                     <Icon
                       name="edit"
                       color="blue"
-                      onClick={() => this.editTask(item.id, item.task)}
+                      onClick={() => this.editTask(item.id, item.task, item.date, item.time)}
                     />
                     <span style={{ paddingRight: 10 }}>Edit</span>
                     <Icon
