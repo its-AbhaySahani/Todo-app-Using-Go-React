@@ -19,8 +19,12 @@ const GetTogether = () => {
       .then((res) => {
         if (res.data) {
           console.log("Shared tasks fetched:", res.data);
-          setSharedItems(res.data.filter(item => item.shared_by === token));
-          setReceivedItems(res.data.filter(item => item.user_id === token));
+          const shared = res.data.filter(item => item.shared_by === token);
+          const received = res.data.filter(item => item.user_id === token);
+          console.log("Filtered shared tasks:", shared);
+          console.log("Filtered received tasks:", received);
+          setSharedItems(shared);
+          setReceivedItems(received);
         }
       })
       .catch((error) => {

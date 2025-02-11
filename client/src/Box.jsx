@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Icon } from "semantic-ui-react";
 import moment from "moment";
 import ShareBox from "./ShareBox";
@@ -6,6 +6,10 @@ import "./Box.css";
 
 const Box = ({ item, editTask, updateTask, undoTask, deleteTask }) => {
   const [shareOpen, setShareOpen] = useState(false);
+
+  useEffect(() => {
+    console.log("Rendering Box component with item:", item);
+  }, [item]);
 
   return (
     <Card key={item.id} className="box-card" color={item.done ? "green" : "red"}>
