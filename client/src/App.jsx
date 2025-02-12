@@ -6,6 +6,8 @@ import ToDoList from "./To-do-lists";
 import Login from "./Authentication/Login";
 import Register from "./Authentication/Register";
 import GetTogether from "./Pages/GetTogether"; // Import GetTogether component
+// import TasksShared from "./Pages/TasksShared";
+// import TasksReceived from "./Pages/TasksReceived";
 
 function App() {
   return (
@@ -63,6 +65,8 @@ function AppContent() {
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<ToDoList />} />
         <Route path="/get-together" element={<GetTogether />} /> {/* Add GetTogether route */}
+        {/* <Route path="/tasks-shared" element={<TasksShared />} />
+        <Route path="/tasks-received" element={<TasksReceived />} /> */}
       </Routes>
     </Container>
   );

@@ -1,12 +1,18 @@
 .get-together {
-    padding: 20px;
-  }
-  
-  .columns {
-    display: flex;
-    justify-content: space-between;
-  }
-  
-  .column {
-    width: 48%;
-  }
+  padding: 20px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.columns {
+  display: flex;
+  justify-content: space-between;
+}
+
+.column {
+  width: 100%;
+}
