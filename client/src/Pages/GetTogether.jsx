@@ -18,11 +18,11 @@ const GetTogether = () => {
         },
       })
       .then((res) => {
-        console.log("API Response:", res.data);
+        console.log("API Response:", res.data); // Log the API response
         if (res.data) {
-          console.log("Shared tasks fetched:", res.data); 
-          const shared = res.data.filter(item => item.shared_by === token);
-          const received = res.data.filter(item => item.user_id === token);
+          console.log("Shared tasks fetched:", res.data);
+          const shared = res.data.shared;
+          const received = res.data.received;
           console.log("Filtered shared tasks:", shared);
           console.log("Filtered received tasks:", received);
           setSharedItems(shared);

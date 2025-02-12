@@ -138,11 +138,19 @@ func GetSharedTodos(w http.ResponseWriter, r *http.Request) {
         return
     }
     sharedTodos, err := models.GetSharedTodos(userID)
-    fmt.Println("sharedTodos:", sharedTodos)
-    fmt.Println("err:", err)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
-    json.NewEncoder(w).Encode(sharedTodos)
+    sharedByMeTodos, err := models.GetSharedByMeTodos(userID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    response := map[string]interface{}{
+        "received": sharedTodos,
+        "shared":   sharedByMeTodos,
+    }
+    fmt.Println("API Response:", response) // Log the API response
+    json.NewEncoder(w).Encode(response)
 }

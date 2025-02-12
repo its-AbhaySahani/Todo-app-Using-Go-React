@@ -107,3 +107,21 @@ func GetSharedTodos(userID string) ([]SharedTodo, error) {
     }
     return sharedTodos, nil
 }
+
+func GetSharedByMeTodos(userID string) ([]SharedTodo, error) {
+    rows, err := database.DB.Query("SELECT id, task, done, user_id, date, time, shared_by FROM shared_todos WHERE shared_by = ?", userID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var sharedByMeTodos []SharedTodo
+    for rows.Next() {
+        var sharedTodo SharedTodo
+        if err := rows.Scan(&sharedTodo.ID, &sharedTodo.Task, &sharedTodo.Done, &sharedTodo.UserID, &sharedTodo.Date, &sharedTodo.Time, &sharedTodo.SharedBy); err != nil {
+            return nil, err
+        }
+        sharedByMeTodos = append(sharedByMeTodos, sharedTodo)
+    }
+    return sharedByMeTodos, nil
+}
