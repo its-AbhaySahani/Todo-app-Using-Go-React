@@ -18,8 +18,9 @@ const GetTogether = () => {
         },
       })
       .then((res) => {
+        console.log("API Response:", res.data);
         if (res.data) {
-          console.log("Shared tasks fetched:", res.data);
+          console.log("Shared tasks fetched:", res.data); 
           const shared = res.data.filter(item => item.shared_by === token);
           const received = res.data.filter(item => item.user_id === token);
           console.log("Filtered shared tasks:", shared);
@@ -38,6 +39,28 @@ const GetTogether = () => {
     console.log("Shared items:", sharedItems);
     console.log("Received items:", receivedItems);
   }, [activeSection, sharedItems, receivedItems]);
+
+  const renderSharedItems = () => (
+    <div className="column">
+      <Header as="h3">Tasks I Shared</Header>
+      <Card.Group>
+        {sharedItems.map((item) => (
+          <Box key={item.id} item={item} />
+        ))}
+      </Card.Group>
+    </div>
+  );
+
+  const renderReceivedItems = () => (
+    <div className="column">
+      <Header as="h3">Tasks Shared With Me</Header>
+      <Card.Group>
+        {receivedItems.map((item) => (
+          <Box key={item.id} item={item} />
+        ))}
+      </Card.Group>
+    </div>
+  );
 
   return (
     <div className="get-together">
@@ -59,26 +82,8 @@ const GetTogether = () => {
         </Button>
       </div>
       <div className="columns">
-        {activeSection === "shared" && (
-          <div className="column">
-            <Header as="h3">Tasks I Shared</Header>
-            <Card.Group>
-              {sharedItems.map((item) => (
-                <Box key={item.id} item={item} />
-              ))}
-            </Card.Group>
-          </div>
-        )}
-        {activeSection === "received" && (
-          <div className="column">
-            <Header as="h3">Tasks Shared With Me</Header>
-            <Card.Group>
-              {receivedItems.map((item) => (
-                <Box key={item.id} item={item} />
-              ))}
-            </Card.Group>
-          </div>
-        )}
+        {activeSection === "shared" && renderSharedItems()}
+        {activeSection === "received" && renderReceivedItems()}
       </div>
     </div>
   );
