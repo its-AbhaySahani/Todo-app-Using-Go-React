@@ -5,6 +5,7 @@
   text-align: center;
   background-color: var(--background-color);
   color: var(--text-color);
+  padding-top: 5rem; 
 }
 
 .logo {

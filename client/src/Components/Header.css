@@ -1,0 +1,28 @@
+.header-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: black;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    z-index: 1000; /* Ensure the header is on top of other elements */
+  }
+  
+  .header-left {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .header-heading {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .header-description {
+    font-size: 1rem;
+    margin-top: 0.5rem;
+  }
