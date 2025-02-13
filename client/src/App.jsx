@@ -7,17 +7,21 @@ import Login from "./Authentication/Login";
 import Register from "./Authentication/Register";
 import GetTogether from "./Pages/GetTogether";
 import HeaderComp from "./Components/Header"; // Import HeaderComp component
+import LeftBar from "./Components/LeftBar"; // Import LeftBar component
 
 function App() {
+  const [filter, setFilter] = useState('all');
+
   return (
     <Router>
-      <HeaderComp /> 
-      <AppContent />
+      <HeaderComp />
+      <LeftBar setFilter={setFilter} /> {/* Add LeftBar component */}
+      <AppContent filter={filter} />
     </Router>
   );
 }
 
-function AppContent() {
+function AppContent({ filter }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
 
@@ -35,7 +39,7 @@ function AppContent() {
   };
 
   return (
-    <Container>
+    <Container style={{ marginLeft: '220px' }}> {/* Add margin to account for the sidebar */}
       <Menu>
         <Menu.Item as={Link} to="/">
           Home
@@ -63,7 +67,7 @@ function AppContent() {
       <Routes>
         <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/" element={<ToDoList />} />
+        <Route path="/" element={<ToDoList filter={filter} />} />
         <Route path="/get-together" element={<GetTogether />} />
       </Routes>
     </Container>

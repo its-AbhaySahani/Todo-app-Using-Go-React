@@ -31,6 +31,12 @@ class ToDoList extends Component {
     this.getTasks();
   }
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.filter !== this.props.filter) {
+      this.getTasks();
+    }
+  }
+
   onChange = (e) => {
     this.setState({ [e.target.name]: e.target.value });
   };
@@ -107,12 +113,24 @@ class ToDoList extends Component {
       })
       .then((res) => {
         if (res.data) {
-          this.setState({
-            items: res.data.map((item) => ({
-              ...item,
-              dateTime: moment.utc(`${item.date} ${item.time}`).toDate(),
-            })),
-          });
+          let items = res.data.map((item) => ({
+            ...item,
+            dateTime: moment.utc(`${item.date} ${item.time}`).toDate(),
+          }));
+
+          // Apply filter
+          const today = moment().format("YYYY-MM-DD");
+          if (this.props.filter === 'today') {
+            items = items.filter(item => item.date === today);
+          } else if (this.props.filter === 'important') {
+            items = items.filter(item => item.important);
+          } else if (this.props.filter === 'completed') {
+            items = items.filter(item => item.done);
+          } else if (this.props.filter === 'incomplete') {
+            items = items.filter(item => !item.done);
+          }
+
+          this.setState({ items });
         }
       });
   };

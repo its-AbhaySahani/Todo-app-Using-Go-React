@@ -15,12 +15,11 @@ const Box = ({ item, editTask, updateTask, undoTask, deleteTask }) => {
     <Card key={item.id} className="box-card" color={item.done ? "green" : "red"}>
       <Card.Content>
         <Card.Header textAlign="left" className="box-card-header">
-          <div style={{ wordWrap: "break-word" }}>{item.task}</div>
-          {item.important && <Icon name="star" color="yellow" />}
+          <div className="task-name" style={{ wordWrap: "break-word" }}>{item.task}</div>
         </Card.Header>
-        <Card.Meta textAlign="left" className="box-card-meta">
-          <span>{moment.utc(`${item.date} ${item.time}`).format("YYYY-MM-DD HH:mm:ss")}</span>
-        </Card.Meta>
+        <Card.Description className="box-card-description">
+          {item.description}
+        </Card.Description>
         <Card.Meta textAlign="right" className="box-card-actions">
           <div>
             <Icon
@@ -59,6 +58,10 @@ const Box = ({ item, editTask, updateTask, undoTask, deleteTask }) => {
             />
             <span>Share</span>
           </div>
+        </Card.Meta>
+        <Card.Meta textAlign="left" className="box-card-meta">
+          {item.important && <Icon name="star" color="yellow" />}
+          <span>{moment.utc(`${item.date} ${item.time}`).format("YYYY-MM-DD HH:mm:ss")}</span>
         </Card.Meta>
       </Card.Content>
       <ShareBox
