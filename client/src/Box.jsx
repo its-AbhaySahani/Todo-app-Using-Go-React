@@ -50,19 +50,22 @@ const Box = ({ item, editTask, updateTask, undoTask, deleteTask }) => {
               className="icon"
             />
             <span>Delete</span>
-            <Icon
-              name="share alternate"
-              color="blue"
-              onClick={() => setShareOpen(true)}
-              className="icon"
-            />
-            <span>Share</span>
           </div>
         </Card.Meta>
         <Card.Meta textAlign="left" className="box-card-meta">
           {item.important && <Icon name="star" color="yellow" />}
           <span>{moment.utc(`${item.date} ${item.time}`).format("YYYY-MM-DD HH:mm:ss")}</span>
+          {item.done && <Icon name="check circle" color="green" />} {/* Green icon for done tasks */}
         </Card.Meta>
+      </Card.Content>
+      <Card.Content extra textAlign="right">
+        <Icon
+          name="share alternate"
+          color="blue"
+          onClick={() => setShareOpen(true)}
+          className="icon"
+        />
+        <span>Share</span>
       </Card.Content>
       <ShareBox
         open={shareOpen}

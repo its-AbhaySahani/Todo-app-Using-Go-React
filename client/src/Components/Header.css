@@ -1,8 +1,9 @@
 .header-container {
     position: fixed;
     top: 0;
-    left: 0;
-    width: 100%;
+    left: 200px; /* Add padding to the left to account for the left sidebar */
+    right: 200px; /* Add padding to the right to account for the right sidebar */
+    width: calc(100% - 400px); /* Adjust width to account for both sidebars */
     background-color: black;
     color: white;
     display: flex;

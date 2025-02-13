@@ -1,0 +1,36 @@
+.rightbar-container {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 100%;
+    background-color: black;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    z-index: 1000; /* Ensure the sidebar is on top of other elements */
+  }
+  
+  .rightbar-menu {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .rightbar-menu button {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    padding: 0.6em 1.2em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.25s;
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+  
+  .rightbar-menu button:hover {
+    background-color: var(--button-hover-bg-color);
+  }

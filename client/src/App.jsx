@@ -1,29 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import "./App.css";
-import { Container, Menu, Icon } from "semantic-ui-react";
+import { Container } from "semantic-ui-react";
 import ToDoList from "./To-do-lists";
 import Login from "./Authentication/Login";
 import Register from "./Authentication/Register";
 import GetTogether from "./Pages/GetTogether";
 import HeaderComp from "./Components/Header"; // Import HeaderComp component
 import LeftBar from "./Components/LeftBar"; // Import LeftBar component
+import RightBar from "./Components/RightBar"; // Import RightBar component
 
 function App() {
   const [filter, setFilter] = useState('all');
-
-  return (
-    <Router>
-      <HeaderComp />
-      <LeftBar setFilter={setFilter} /> {/* Add LeftBar component */}
-      <AppContent filter={filter} />
-    </Router>
-  );
-}
-
-function AppContent({ filter }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -32,6 +21,19 @@ function AppContent({ filter }) {
     }
   }, []);
 
+  return (
+    <Router>
+      <HeaderComp />
+      <LeftBar setFilter={setFilter} /> {/* Add LeftBar component */}
+      <RightBar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} /> {/* Add RightBar component */}
+      <AppContent filter={filter} isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+    </Router>
+  );
+}
+
+function AppContent({ filter, isAuthenticated, setIsAuthenticated }) {
+  const navigate = useNavigate();
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
@@ -39,31 +41,7 @@ function AppContent({ filter }) {
   };
 
   return (
-    <Container style={{ marginLeft: '220px' }}> {/* Add margin to account for the sidebar */}
-      <Menu>
-        <Menu.Item as={Link} to="/">
-          Home
-        </Menu.Item>
-        {isAuthenticated ? (
-          <>
-            <Menu.Item position="right">
-              <Icon name="user" />
-            </Menu.Item>
-            <Menu.Item onClick={handleLogout}>
-              Logout
-            </Menu.Item>
-          </>
-        ) : (
-          <>
-            <Menu.Item as={Link} to="/login">
-              Login
-            </Menu.Item>
-            <Menu.Item as={Link} to="/register">
-              Register
-            </Menu.Item>
-          </>
-        )}
-      </Menu>
+    <Container style={{ marginLeft: '220px', marginRight: '220px' }}> {/* Add margin to account for the sidebars */}
       <Routes>
         <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
         <Route path="/register" element={<Register />} />

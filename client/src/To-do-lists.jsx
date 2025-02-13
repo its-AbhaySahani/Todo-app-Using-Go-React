@@ -7,7 +7,6 @@ import DateTimePicker from "@mui/lab/DateTimePicker";
 import TextField from "@mui/material/TextField";
 import moment from "moment";
 import Box from "./Box";
-import { Link } from "react-router-dom";
 import "./Box.css";
 
 let endpoint = "http://localhost:9000";
@@ -226,11 +225,6 @@ class ToDoList extends Component {
               />
             ))}
           </Card.Group>
-        </div>
-        <div className="row">
-          <Link to="/get-together">
-            <Button>Go to Shared Tasks</Button>
-          </Link>
         </div>
         <Modal open={this.state.modalOpen} onClose={this.closeModal}>
           <Modal.Header>{this.state.editTaskId ? "Update Task" : "Add Task"}</Modal.Header>
