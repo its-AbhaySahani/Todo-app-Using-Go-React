@@ -32,3 +32,7 @@ button {
 button:hover {
   background-color: var(--button-hover-bg-color);
 }
+
+.columns h3 {
+  color: white;
+}

@@ -57,7 +57,7 @@ const GetTogether = () => {
 
   const renderReceivedItems = () => (
     <div className="column">
-      <Header as="h3">Tasks Shared With Me</Header>
+      <Header as="h3">Tasks Shared With Me</Header> 
       {receivedItems.length > 0 ? (
         <Card.Group>
           {receivedItems.map((item) => (
