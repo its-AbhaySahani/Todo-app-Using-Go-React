@@ -16,6 +16,7 @@ const Box = ({ item, editTask, updateTask, undoTask, deleteTask }) => {
       <Card.Content>
         <Card.Header textAlign="left" className="box-card-header">
           <div style={{ wordWrap: "break-word" }}>{item.task}</div>
+          {item.important && <Icon name="star" color="yellow" />}
         </Card.Header>
         <Card.Meta textAlign="left" className="box-card-meta">
           <span>{moment.utc(`${item.date} ${item.time}`).format("YYYY-MM-DD HH:mm:ss")}</span>
@@ -25,7 +26,7 @@ const Box = ({ item, editTask, updateTask, undoTask, deleteTask }) => {
             <Icon
               name="edit"
               color="blue"
-              onClick={() => editTask(item.id, item.task, item.date, item.time)}
+              onClick={() => editTask(item.id, item.task, item.description, item.date, item.time, item.important)}
               className="icon"
             />
             <span>Edit</span>

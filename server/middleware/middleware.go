@@ -2,7 +2,6 @@ package middleware
 
 import (
     "encoding/json"
-    "fmt"
     "net/http"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models"
     "github.com/gorilla/mux"
@@ -34,7 +33,7 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
-    createdTodo, err := models.CreateTodo(todo.Task, userID)
+    createdTodo, err := models.CreateTodo(todo.Task, todo.Description, todo.Important, userID)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -53,7 +52,7 @@ func UpdateTodo(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
-    updatedTodo, err := models.UpdateTodo(params["id"], todo.Task, todo.Done, userID)
+    updatedTodo, err := models.UpdateTodo(params["id"], todo.Task, todo.Description, todo.Done, todo.Important, userID)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -104,11 +103,9 @@ func ShareTodo(w http.ResponseWriter, r *http.Request) {
     }
     err := json.NewDecoder(r.Body).Decode(&request)
     if err != nil {
-        fmt.Println("Error decoding request:", err)
         http.Error(w, "Invalid request payload", http.StatusBadRequest)
         return
     }
-    fmt.Println("Share request:", request)
     userID, ok := r.Context().Value("userID").(string)
     if !ok {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -116,13 +113,11 @@ func ShareTodo(w http.ResponseWriter, r *http.Request) {
     }
     user, err := models.GetUserByUsername(request.Username)
     if err != nil {
-        fmt.Println("Error fetching user:", err)
         http.Error(w, "User not found", http.StatusNotFound)
         return
     }
     err = models.ShareTodoWithUser(request.TaskID, user.ID, userID)
     if err != nil {
-        fmt.Println("Error sharing task:", err)
         http.Error(w, "Error sharing task", http.StatusInternalServerError)
         return
     }
@@ -151,6 +146,5 @@ func GetSharedTodos(w http.ResponseWriter, r *http.Request) {
         "received": sharedTodos,
         "shared":   sharedByMeTodos,
     }
-    fmt.Println("API Response:", response) // Log the API response
     json.NewEncoder(w).Encode(response)
 }

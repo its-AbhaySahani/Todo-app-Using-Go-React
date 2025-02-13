@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import axios from "axios";
-import { Card, Header, Form, Input, Button } from "semantic-ui-react";
+import { Card, Header, Form, Input, Button, Modal, Checkbox, Icon } from "semantic-ui-react"; // Import Icon here
 import { LocalizationProvider } from "@mui/lab";
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import DateTimePicker from "@mui/lab/DateTimePicker";
@@ -8,6 +8,7 @@ import TextField from "@mui/material/TextField";
 import moment from "moment";
 import Box from "./Box";
 import { Link } from "react-router-dom";
+import "./Box.css";
 
 let endpoint = "http://localhost:9000";
 
@@ -17,9 +18,12 @@ class ToDoList extends Component {
 
     this.state = {
       task: "",
+      description: "",
+      important: false,
       dateTime: new Date(),
       items: [],
       editTaskId: null,
+      modalOpen: false,
     };
   }
 
@@ -29,6 +33,10 @@ class ToDoList extends Component {
 
   onChange = (e) => {
     this.setState({ [e.target.name]: e.target.value });
+  };
+
+  onCheckboxChange = (e, { checked }) => {
+    this.setState({ important: checked });
   };
 
   onDateTimeChange = (dateTime) => {
@@ -47,6 +55,8 @@ class ToDoList extends Component {
             `${endpoint}/api/todo/${this.state.editTaskId}`,
             {
               task: this.state.task,
+              description: this.state.description,
+              important: this.state.important,
               done: false,
               date: formattedDate,
               time: formattedTime,
@@ -59,7 +69,7 @@ class ToDoList extends Component {
           )
           .then(() => {
             this.getTasks();
-            this.setState({ task: "", editTaskId: null, dateTime: new Date() });
+            this.setState({ task: "", description: "", important: false, editTaskId: null, dateTime: new Date(), modalOpen: false });
           });
       } else {
         axios
@@ -67,6 +77,8 @@ class ToDoList extends Component {
             `${endpoint}/api/todo`,
             {
               task: this.state.task,
+              description: this.state.description,
+              important: this.state.important,
               done: false,
               date: formattedDate,
               time: formattedTime,
@@ -79,7 +91,7 @@ class ToDoList extends Component {
           )
           .then(() => {
             this.getTasks();
-            this.setState({ task: "", dateTime: new Date() });
+            this.setState({ task: "", description: "", important: false, dateTime: new Date(), modalOpen: false });
           });
       }
     }
@@ -156,8 +168,16 @@ class ToDoList extends Component {
       });
   };
 
-  editTask = (id, task, date, time) => {
-    this.setState({ task, editTaskId: id, dateTime: moment.utc(`${date} ${time}`).toDate() });
+  editTask = (id, task, description, date, time, important) => {
+    this.setState({ task, description, important, editTaskId: id, dateTime: moment.utc(`${date} ${time}`).toDate(), modalOpen: true });
+  };
+
+  openModal = () => {
+    this.setState({ modalOpen: true });
+  };
+
+  closeModal = () => {
+    this.setState({ modalOpen: false });
   };
 
   render() {
@@ -169,30 +189,14 @@ class ToDoList extends Component {
           </Header>
         </div>
         <div className="row">
-          <Form onSubmit={this.onSubmit}>
-            <Input
-              type="text"
-              name="task"
-              onChange={this.onChange}
-              value={this.state.task}
-              fluid
-              placeholder="Create Task"
-            />
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DateTimePicker
-                label="Date & Time"
-                value={this.state.dateTime}
-                onChange={this.onDateTimeChange}
-                renderInput={(params) => <TextField {...params} />}
-              />
-            </LocalizationProvider>
-            <Button type="submit">
-              {this.state.editTaskId ? "Update Task" : "Add Task"}
-            </Button>
-          </Form>
-        </div>
-        <div className="row">
           <Card.Group>
+            <Card className="box-card add-task-card" onClick={this.openModal}>
+              <Card.Content>
+                <Card.Header textAlign="center">
+                  <Icon name="plus" size="huge" />
+                </Card.Header>
+              </Card.Content>
+            </Card>
             {this.state.items.map((item) => (
               <Box
                 key={item.id}
@@ -210,6 +214,56 @@ class ToDoList extends Component {
             <Button>Go to Shared Tasks</Button>
           </Link>
         </div>
+        <Modal open={this.state.modalOpen} onClose={this.closeModal}>
+          <Modal.Header>{this.state.editTaskId ? "Update Task" : "Add Task"}</Modal.Header>
+          <Modal.Content>
+            <Form onSubmit={this.onSubmit}>
+              <Form.Field>
+                <label>Task Name</label>
+                <Input
+                  type="text"
+                  name="task"
+                  onChange={this.onChange}
+                  value={this.state.task}
+                  fluid
+                  placeholder="Task Name"
+                />
+              </Form.Field>
+              <Form.Field>
+                <label>Description</label>
+                <Input
+                  type="text"
+                  name="description"
+                  onChange={this.onChange}
+                  value={this.state.description}
+                  fluid
+                  placeholder="Description"
+                />
+              </Form.Field>
+              <Form.Field>
+                <label>Mark as Important</label>
+                <Checkbox
+                  toggle
+                  checked={this.state.important}
+                  onChange={this.onCheckboxChange}
+                />
+              </Form.Field>
+              <Form.Field>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DateTimePicker
+                    label="Date & Time"
+                    value={this.state.dateTime}
+                    onChange={this.onDateTimeChange}
+                    renderInput={(params) => <TextField {...params} />}
+                  />
+                </LocalizationProvider>
+              </Form.Field>
+              <Button type="submit">
+                {this.state.editTaskId ? "Update Task" : "Add Task"}
+              </Button>
+            </Form>
+          </Modal.Content>
+        </Modal>
       </div>
     );
   }

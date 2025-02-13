@@ -21,8 +21,8 @@ const GetTogether = () => {
         console.log("API Response:", res.data); // Log the API response
         if (res.data) {
           console.log("Shared tasks fetched:", res.data);
-          const shared = res.data.shared;
-          const received = res.data.received;
+          const shared = res.data.shared || [];
+          const received = res.data.received || [];
           console.log("Filtered shared tasks:", shared);
           console.log("Filtered received tasks:", received);
           setSharedItems(shared);
@@ -43,22 +43,30 @@ const GetTogether = () => {
   const renderSharedItems = () => (
     <div className="column">
       <Header as="h3">Tasks I Shared</Header>
-      <Card.Group>
-        {sharedItems.map((item) => (
-          <Box key={item.id} item={item} />
-        ))}
-      </Card.Group>
+      {sharedItems.length > 0 ? (
+        <Card.Group>
+          {sharedItems.map((item) => (
+            <Box key={item.id} item={item} />
+          ))}
+        </Card.Group>
+      ) : (
+        <p>No tasks shared by you.</p>
+      )}
     </div>
   );
 
   const renderReceivedItems = () => (
     <div className="column">
       <Header as="h3">Tasks Shared With Me</Header>
-      <Card.Group>
-        {receivedItems.map((item) => (
-          <Box key={item.id} item={item} />
-        ))}
-      </Card.Group>
+      {receivedItems.length > 0 ? (
+        <Card.Group>
+          {receivedItems.map((item) => (
+            <Box key={item.id} item={item} />
+          ))}
+        </Card.Group>
+      ) : (
+        <p>No tasks shared with you.</p>
+      )}
     </div>
   );
 
