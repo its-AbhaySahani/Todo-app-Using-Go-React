@@ -1,5 +1,7 @@
 .get-together {
   padding: 20px;
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 .button-group {
@@ -15,4 +17,18 @@
 
 .column {
   width: 100%;
+}
+
+button {
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  border: none;
+  padding: 0.6em 1.2em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.25s;
+}
+
+button:hover {
+  background-color: var(--button-hover-bg-color);
 }
