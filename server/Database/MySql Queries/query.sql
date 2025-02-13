@@ -1,10 +1,5 @@
 USE Todo_app;
 
--- Drop existing tables if they exist
-DROP TABLE IF EXISTS shared_todos;
-DROP TABLE IF EXISTS todos;
-DROP TABLE IF EXISTS users;
-
 -- Create users table
 CREATE TABLE `users` (
   `id` varchar(36) NOT NULL,

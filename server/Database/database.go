@@ -9,7 +9,7 @@ import (
 var DB *sql.DB
 
 func Connect() {
-    dsn := "abhay:Abhay@123@tcp(127.0.0.1:3306)/Todo_app"
+    dsn := "Abhay:Abhay@123@tcp(127.0.0.1:3306)/Todo_app"
     db, err := sql.Open("mysql", dsn)
     if err != nil {
         fmt.Println("Error connecting to the database:", err)
