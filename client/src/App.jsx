@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import "./App.css";
 import { Container } from "semantic-ui-react";
 import ToDoList from "./To-do-lists";
 import Login from "./Authentication/Login";
 import Register from "./Authentication/Register";
 import GetTogether from "./Pages/GetTogether";
-import HeaderComp from "./Components/Header"; // Import HeaderComp component
-import LeftBar from "./Components/LeftBar"; // Import LeftBar component
-import RightBar from "./Components/RightBar"; // Import RightBar component
+import HeaderComp from "./Components/Header";
+import LeftBar from "./Components/LeftBar";
+import RightBar from "./Components/RightBar";
+import Aurora from "./Aurora"; // Import Aurora component
 
 function App() {
   const [filter, setFilter] = useState('all');
@@ -23,10 +24,13 @@ function App() {
 
   return (
     <Router>
-      <HeaderComp />
-      <LeftBar setFilter={setFilter} /> {/* Add LeftBar component */}
-      <RightBar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} /> {/* Add RightBar component */}
-      <AppContent filter={filter} isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+      <div className="app-container">
+        <Aurora colorStops={["#3a3a66", "#7a7aed", "#9a48ad"]} speed={1} />
+        <HeaderComp />
+        <LeftBar setFilter={setFilter} />
+        <RightBar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+        <AppContent filter={filter} isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+      </div>
     </Router>
   );
 }
@@ -41,7 +45,7 @@ function AppContent({ filter, isAuthenticated, setIsAuthenticated }) {
   };
 
   return (
-    <Container style={{ marginLeft: '220px', marginRight: '220px' }}> {/* Add margin to account for the sidebars */}
+    <Container style={{ marginLeft: '220px', marginRight: '220px' }}>
       <Routes>
         <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
         <Route path="/register" element={<Register />} />

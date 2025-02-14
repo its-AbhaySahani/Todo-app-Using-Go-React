@@ -37,3 +37,45 @@ CREATE TABLE `shared_todos` (
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),
   FOREIGN KEY (`shared_by`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+
+# Team Feature
+
+USE Todo_app;
+
+-- Create teams table
+CREATE TABLE `teams` (
+  `id` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `admin_id` varchar(36) NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`admin_id`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Create team_members table
+CREATE TABLE `team_members` (
+  `team_id` varchar(36) NOT NULL,
+  `user_id` varchar(36) NOT NULL,
+  `is_admin` BOOLEAN DEFAULT FALSE,
+  PRIMARY KEY (`team_id`, `user_id`),
+  FOREIGN KEY (`team_id`) REFERENCES `teams`(`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Create team_todos table
+CREATE TABLE `team_todos` (
+  `id` varchar(36) NOT NULL,
+  `task` varchar(255) NOT NULL,
+  `description` text,
+  `done` BOOLEAN NOT NULL,
+  `important` BOOLEAN DEFAULT FALSE,
+  `team_id` varchar(36) NOT NULL,
+  `assigned_to` varchar(36),
+  `date` DATE DEFAULT NULL,
+  `time` TIME DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`team_id`) REFERENCES `teams`(`id`),
+  FOREIGN KEY (`assigned_to`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

@@ -26,5 +26,14 @@ func Router() *mux.Router {
     apiRouter.HandleFunc("/share", middleware.ShareTodo).Methods("POST")
     apiRouter.HandleFunc("/shared", middleware.GetSharedTodos).Methods("GET")
 
+    // Team routes
+    apiRouter.HandleFunc("/team", middleware.CreateTeam).Methods("POST")
+    apiRouter.HandleFunc("/team/join", middleware.JoinTeam).Methods("POST")
+    apiRouter.HandleFunc("/team/{teamId}/todos", middleware.GetTeamTodos).Methods("GET")
+    apiRouter.HandleFunc("/team/{teamId}/todo", middleware.CreateTeamTodo).Methods("POST")
+    apiRouter.HandleFunc("/team/{teamId}/todo/{id}", middleware.UpdateTeamTodo).Methods("PUT")
+    apiRouter.HandleFunc("/team/{teamId}/todo/{id}", middleware.DeleteTeamTodo).Methods("DELETE")
+    apiRouter.HandleFunc("/team/{teamId}/member/{userId}", middleware.RemoveTeamMember).Methods("DELETE")
+
     return router
 }

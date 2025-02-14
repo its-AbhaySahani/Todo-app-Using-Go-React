@@ -148,3 +148,112 @@ func GetSharedTodos(w http.ResponseWriter, r *http.Request) {
     }
     json.NewEncoder(w).Encode(response)
 }
+
+// Team-related handlers
+
+// Create a new team
+func CreateTeam(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    var team models.Team
+    _ = json.NewDecoder(r.Body).Decode(&team)
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    createdTeam, err := models.CreateTeam(team.Name, team.Password, userID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(createdTeam)
+}
+
+// Join an existing team
+func JoinTeam(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    var request struct {
+        TeamID   string `json:"teamId"`
+        Password string `json:"password"`
+    }
+    _ = json.NewDecoder(r.Body).Decode(&request)
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    err := models.JoinTeam(request.TeamID, request.Password, userID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(map[string]string{"result": "success"})
+}
+
+// Create a new team todo
+func CreateTeamTodo(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    var todo models.TeamTodo
+    _ = json.NewDecoder(r.Body).Decode(&todo)
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    createdTodo, err := models.CreateTeamTodo(todo.Task, todo.Description, todo.Important, todo.TeamID, userID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(createdTodo)
+}
+
+// Get all team todos
+func GetTeamTodos(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    params := mux.Vars(r)
+    todos, err := models.GetTeamTodos(params["teamId"])
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(todos)
+}
+
+// Update a team todo
+func UpdateTeamTodo(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    params := mux.Vars(r)
+    var todo models.TeamTodo
+    _ = json.NewDecoder(r.Body).Decode(&todo)
+    updatedTodo, err := models.UpdateTeamTodo(params["id"], todo.Task, todo.Description, todo.Done, todo.Important, todo.TeamID, todo.AssignedTo)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(updatedTodo)
+}
+
+// Delete a team todo
+func DeleteTeamTodo(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    params := mux.Vars(r)
+    err := models.DeleteTeamTodo(params["id"], params["teamId"])
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(map[string]string{"result": "success"})
+}
+
+// Remove a team member
+func RemoveTeamMember(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    params := mux.Vars(r)
+    err := models.RemoveTeamMember(params["teamId"], params["userId"])
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(map[string]string{"result": "success"})
+}
