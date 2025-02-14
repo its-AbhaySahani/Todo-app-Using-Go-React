@@ -208,6 +208,22 @@ func CreateTeamTodo(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(createdTodo)
 }
 
+// Get all teams for the authenticated user
+func GetTeams(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    teams, err := models.GetTeams(userID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(teams)
+}
+
 // Get all team todos
 func GetTeamTodos(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
@@ -256,4 +272,37 @@ func RemoveTeamMember(w http.ResponseWriter, r *http.Request) {
         return
     }
     json.NewEncoder(w).Encode(map[string]string{"result": "success"})
+}
+
+// Get team details
+func GetTeamDetails(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    params := mux.Vars(r)
+    team, err := models.GetTeamByID(params["teamId"])
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    todos, err := models.GetTeamTodos(params["teamId"])
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    response := map[string]interface{}{
+        "team":  team,
+        "tasks": todos,
+    }
+    json.NewEncoder(w).Encode(response)
+}
+
+// Get team members
+func GetTeamMembers(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    params := mux.Vars(r)
+    members, err := models.GetTeamMembers(params["teamId"])
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(members)
 }

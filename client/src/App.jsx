@@ -10,6 +10,9 @@ import HeaderComp from "./Components/Header";
 import LeftBar from "./Components/LeftBar";
 import RightBar from "./Components/RightBar";
 import Aurora from "./Aurora"; // Import Aurora component
+import CreateTeamForm from "./Components/CreateTeamForm";
+import TeamDetailsBox from "./Components/TeamDetailsBox";
+import TeamPage from "./Pages/TeamPage";
 
 function App() {
   const [filter, setFilter] = useState('all');
@@ -51,6 +54,9 @@ function AppContent({ filter, isAuthenticated, setIsAuthenticated }) {
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<ToDoList filter={filter} />} />
         <Route path="/get-together" element={<GetTogether />} />
+        <Route path="/create-team" element={<CreateTeamForm />} />
+        <Route path="/my-teams" element={<TeamDetailsBox />} />
+        <Route path="/team/:teamId" element={<TeamPage />} />
       </Routes>
     </Container>
   );

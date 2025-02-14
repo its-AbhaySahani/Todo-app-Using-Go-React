@@ -38,9 +38,9 @@ type Team struct {
 }
 
 type TeamMember struct {
-    TeamID string `json:"team_id"`
-    UserID string `json:"user_id"`
-    IsAdmin bool  `json:"is_admin"`
+    TeamID  string `json:"team_id"`
+    UserID  string `json:"user_id"`
+    IsAdmin bool   `json:"is_admin"`
 }
 
 type TeamTodo struct {
@@ -54,6 +54,13 @@ type TeamTodo struct {
     Date        string `json:"date"`
     Time        string `json:"time"`
 }
+
+type TeamMemberDetails struct {
+    ID       string `json:"id"`
+    Username string `json:"username"`
+    IsAdmin  bool   `json:"is_admin"`
+}
+
 
 func GetTodos(userID string) ([]Todo, error) {
     rows, err := database.DB.Query("SELECT id, task, description, done, important, date, time FROM todos WHERE user_id = ?", userID)
@@ -223,6 +230,25 @@ func GetTeamTodos(teamID string) ([]TeamTodo, error) {
     return todos, nil
 }
 
+func GetTeams(userID string) ([]Team, error) {
+    rows, err := database.DB.Query("SELECT t.id, t.name, t.password, t.admin_id FROM teams t JOIN team_members tm ON t.id = tm.team_id WHERE tm.user_id = ?", userID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var teams []Team
+    for rows.Next() {
+        var team Team
+        if err := rows.Scan(&team.ID, &team.Name, &team.Password, &team.AdminID); err != nil {
+            return nil, err
+        }
+        teams = append(teams, team)
+    }
+    return teams, nil
+}
+
+
 func UpdateTeamTodo(id, task, description string, done, important bool, teamID, assignedTo string) (TeamTodo, error) {
     _, err := database.DB.Exec("UPDATE team_todos SET task = ?, description = ?, done = ?, important = ?, assigned_to = ? WHERE id = ? AND team_id = ?", task, description, done, important, assignedTo, id, teamID)
     if err != nil {
@@ -244,4 +270,31 @@ func DeleteTeamTodo(id, teamID string) error {
 func RemoveTeamMember(teamID, userID string) error {
     _, err := database.DB.Exec("DELETE FROM team_members WHERE team_id = ? AND user_id = ?", teamID, userID)
     return err
+}
+
+func GetTeamByID(teamID string) (Team, error) {
+    var team Team
+    err := database.DB.QueryRow("SELECT id, name, password, admin_id FROM teams WHERE id = ?", teamID).Scan(&team.ID, &team.Name, &team.Password, &team.AdminID)
+    if err != nil {
+        return Team{}, err
+    }
+    return team, nil
+}
+
+func GetTeamMembers(teamID string) ([]TeamMemberDetails, error) {
+    rows, err := database.DB.Query("SELECT u.id, u.username, tm.is_admin FROM users u JOIN team_members tm ON u.id = tm.user_id WHERE tm.team_id = ?", teamID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var members []TeamMemberDetails
+    for rows.Next() {
+        var member TeamMemberDetails
+        if err := rows.Scan(&member.ID, &member.Username, &member.IsAdmin); err != nil {
+            return nil, err
+        }
+        members = append(members, member)
+    }
+    return members, nil
 }
