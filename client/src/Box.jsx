@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, Icon } from "semantic-ui-react";
 import moment from "moment";
 import ShareBox from "./ShareBox";
-import "./Box.css";
+import "./Box.css"; 
 
 const Box = ({ item, editTask, updateTask, undoTask, deleteTask }) => {
   const [shareOpen, setShareOpen] = useState(false);

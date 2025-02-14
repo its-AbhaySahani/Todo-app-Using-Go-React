@@ -201,9 +201,9 @@ class ToDoList extends Component {
     return (
       <div>
         <div className="row">
-          <Header className="header" as="h2" color="yellow">
+          {/* <Header className="header" as="h2" color="yellow">
             To Do List
-          </Header>
+          </Header> */}
         </div>
         <div className="row">
           <Card.Group>

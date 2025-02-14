@@ -4,12 +4,12 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 16px;
   transition: transform 0.2s, box-shadow 0.2s;
-  width: 200px; /* Set a fixed width */
-  height: auto; /* Adjust height to fit content */
+  width: 200px; 
+  height: auto; 
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background-color: var(--card-bg-color);
+  background-color: #4c4193; 
   color: var(--text-color);
 }
 
@@ -64,6 +64,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--card-bg-color);
+  background-color: #4c4193; /* Change background color */
   color: var(--text-color);
 }
