@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { Button, Modal, Form, Input } from "semantic-ui-react";
 import PeopleList from "../Components/PeopleList";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import "./PeoplePage.css";
 
 const PeoplePage = () => {
   const { teamId } = useParams();
+  const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [username, setUsername] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -38,11 +39,15 @@ const PeoplePage = () => {
 
   return (
     <div className="people-page">
-      <h2>Team Members</h2>
-      <Button onClick={() => setModalOpen(true)}>Add Person</Button>
-      <PeopleList open={true} onClose={() => {}} teamId={teamId} />
+      <div className="header">
+        <h2>Team Members</h2>
+        <Button className="add-member-button" onClick={() => setModalOpen(true)}>
+          Add Member
+        </Button>
+      </div>
+      <PeopleList open={true} onClose={() => navigate(`/team/${teamId}`)} teamId={teamId} />
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-        <Modal.Header>Add Person</Modal.Header>
+        <Modal.Header>Add Member</Modal.Header>
         <Modal.Content>
           <Form>
             <Form.Field>

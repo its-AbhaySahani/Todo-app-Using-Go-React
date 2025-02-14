@@ -74,7 +74,7 @@ const TeamPage = () => {
           {team.name}
         </Header>
         <Button className="people-button" onClick={() => navigate(`/team/${teamId}/people`)}>
-          <Icon name="users" /> People
+          <Icon name="users" /> Members
         </Button>
       </div>
       <div className="task-section">

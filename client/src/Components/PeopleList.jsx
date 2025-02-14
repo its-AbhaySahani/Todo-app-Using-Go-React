@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Modal, List, Button } from "semantic-ui-react";
+import { useNavigate } from "react-router-dom";
 
 const PeopleList = ({ open, onClose, teamId }) => {
   const [people, setPeople] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -37,7 +39,7 @@ const PeopleList = ({ open, onClose, teamId }) => {
         </List>
       </Modal.Content>
       <Modal.Actions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={() => navigate(`/team/${teamId}`)}>Close</Button>
       </Modal.Actions>
     </Modal>
   );
