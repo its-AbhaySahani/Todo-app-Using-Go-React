@@ -1,22 +1,27 @@
 .team-page {
-    padding: 20px;
-    background-color: var(--background-color);
-    color: var(--text-color);
-  }
-  
-  .team-name {
-    color: white !important; /* Ensure the text color is white */
-    text-align: center;
-    margin-bottom: 20px;
-    font-size: 2rem; /* Adjust font size as needed */
-  }
-  
-  .people-button {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-  }
-  
-  .task-section {
-    margin-top: 20px;
-  }
+  padding: 20px;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.team-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.team-name {
+  color: white !important; /* Ensure the text color is white */
+  font-size: 2rem; /* Adjust font size as needed */
+}
+
+.people-button {
+  display: flex;
+  align-items: center;
+  color: Black !important; /* Ensure the text color is white */
+}
+
+.task-section {
+  margin-top: 20px;
+}

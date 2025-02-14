@@ -7,7 +7,6 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import TextField from "@mui/material/TextField";
 import Box from "../Box";
-import PeopleList from "../Components/PeopleList";
 import "./TeamPage.css";
 
 const TeamPage = () => {
@@ -19,7 +18,6 @@ const TeamPage = () => {
   const [description, setDescription] = useState("");
   const [important, setImportant] = useState(false);
   const [dateTime, setDateTime] = useState(new Date());
-  const [peopleOpen, setPeopleOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,12 +69,14 @@ const TeamPage = () => {
 
   return (
     <div className="team-page">
-      <Header as="h2" className="team-name">
-        {team.name}
-      </Header>
-      <Button className="people-button" onClick={() => setPeopleOpen(true)}>
-        People
-      </Button>
+      <div className="team-header">
+        <Header as="h2" className="team-name">
+          {team.name}
+        </Header>
+        <Button className="people-button" onClick={() => navigate(`/team/${teamId}/people`)}>
+          <Icon name="users" /> People
+        </Button>
+      </div>
       <div className="task-section">
         <Card.Group>
           <Card className="box-card add-task-card" onClick={() => setModalOpen(true)}>
@@ -137,7 +137,6 @@ const TeamPage = () => {
           </Form>
         </Modal.Content>
       </Modal>
-      <PeopleList open={peopleOpen} onClose={() => setPeopleOpen(false)} teamId={teamId} />
     </div>
   );
 };

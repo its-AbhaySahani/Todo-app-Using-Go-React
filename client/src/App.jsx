@@ -13,6 +13,7 @@ import Aurora from "./Aurora"; // Import Aurora component
 import CreateTeamForm from "./Components/CreateTeamForm";
 import TeamDetailsBox from "./Components/TeamDetailsBox";
 import TeamPage from "./Pages/TeamPage";
+import PeoplePage from "./Pages/PeoplePage"; // Import PeoplePage
 
 function App() {
   const [filter, setFilter] = useState('all');
@@ -57,6 +58,7 @@ function AppContent({ filter, isAuthenticated, setIsAuthenticated }) {
         <Route path="/create-team" element={<CreateTeamForm />} />
         <Route path="/my-teams" element={<TeamDetailsBox />} />
         <Route path="/team/:teamId" element={<TeamPage />} />
+        <Route path="/team/:teamId/people" element={<PeoplePage />} /> {/* Add PeoplePage route */}
       </Routes>
     </Container>
   );
