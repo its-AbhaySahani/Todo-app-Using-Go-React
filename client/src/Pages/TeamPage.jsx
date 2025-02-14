@@ -13,7 +13,7 @@ import "./TeamPage.css";
 const TeamPage = () => {
   const { teamId } = useParams();
   const [team, setTeam] = useState({});
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState([]); // Initialize tasks to an empty array
   const [modalOpen, setModalOpen] = useState(false);
   const [task, setTask] = useState("");
   const [description, setDescription] = useState("");
@@ -32,7 +32,7 @@ const TeamPage = () => {
       })
       .then((res) => {
         setTeam(res.data.team);
-        setTasks(res.data.tasks);
+        setTasks(res.data.tasks || []); // Ensure tasks is always an array
       })
       .catch((error) => {
         console.error("Error fetching team details:", error);

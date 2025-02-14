@@ -5,9 +5,10 @@
   }
   
   .team-name {
-    color: white;
+    color: white !important; /* Ensure the text color is white */
     text-align: center;
     margin-bottom: 20px;
+    font-size: 2rem; /* Adjust font size as needed */
   }
   
   .people-button {
