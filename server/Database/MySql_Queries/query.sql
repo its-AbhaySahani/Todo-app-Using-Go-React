@@ -40,10 +40,6 @@ CREATE TABLE `shared_todos` (
 
 
 
-# Team Feature
-
-USE Todo_app;
-
 -- Create teams table
 CREATE TABLE `teams` (
   `id` varchar(36) NOT NULL,
