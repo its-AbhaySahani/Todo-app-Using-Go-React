@@ -1,0 +1,5 @@
+.admin-label {
+    font-weight: bold;
+    margin-left: 5px; /* Add some space between the username and the "Admin" text */
+    color: green !important; /* Ensure the text color is green */
+  }
