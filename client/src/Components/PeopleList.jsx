@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Modal, List, Button } from "semantic-ui-react";
+import { Modal, List, Button, Icon } from "semantic-ui-react";
 import { useNavigate } from "react-router-dom";
 
 const PeopleList = ({ open, onClose, teamId }) => {
@@ -40,6 +40,9 @@ const PeopleList = ({ open, onClose, teamId }) => {
       </Modal.Content>
       <Modal.Actions>
         <Button onClick={() => navigate(`/team/${teamId}`)}>Close</Button>
+        <Button color="blue" onClick={() => navigate(`/team/${teamId}/add-member`)}>
+          <Icon name="user plus" /> Add Member
+        </Button>
       </Modal.Actions>
     </Modal>
   );

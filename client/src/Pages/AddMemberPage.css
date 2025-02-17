@@ -1,0 +1,27 @@
+.add-member-page {
+    padding: 20px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+  }
+  
+  .add-member-page h2 {
+    margin-bottom: 20px;
+  }
+  
+  .add-member-page .ui.form {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  .add-member-page .ui.button {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+  }
+  
+  .add-member-page .ui.button:hover {
+    background-color: var(--button-hover-bg-color);
+  }
+  
+  .add-member-page .ui.message {
+    margin-top: 20px;
+  }
