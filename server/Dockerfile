@@ -1,5 +1,5 @@
 # Use the official Golang image as the base image
-FROM golang:1.20 as build
+FROM golang:1.20 AS build
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main .
 
 # Use a minimal base image for the final container
-FROM alpine:latest
+FROM alpine:latest AS production
 
 # Set the working directory inside the container
 WORKDIR /root/
