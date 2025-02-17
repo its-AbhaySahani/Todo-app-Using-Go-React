@@ -307,3 +307,24 @@ func GetTeamMembers(w http.ResponseWriter, r *http.Request) {
     }
     json.NewEncoder(w).Encode(members)
 }
+
+// Add a team member
+func AddTeamMember(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    var request struct {
+        Username string `json:"username"`
+    }
+    _ = json.NewDecoder(r.Body).Decode(&request)
+    params := mux.Vars(r)
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    err := models.AddTeamMember(params["teamId"], request.Username, userID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(map[string]string{"result": "success"})
+}

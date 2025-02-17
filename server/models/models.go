@@ -298,3 +298,15 @@ func GetTeamMembers(teamID string) ([]TeamMemberDetails, error) {
     }
     return members, nil
 }
+
+// Add a team member
+func AddTeamMember(teamID, username, addedBy string) error {
+    var user User
+    err := database.DB.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&user.ID)
+    if err != nil {
+        return err
+    }
+
+    _, err = database.DB.Exec("INSERT INTO team_members (team_id, user_id) VALUES (?, ?)", teamID, user.ID)
+    return err
+}
