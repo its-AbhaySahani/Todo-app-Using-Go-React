@@ -27,6 +27,8 @@ const RightBar = ({ isAuthenticated, setIsAuthenticated }) => {
         <Link to="/get-together">
           <button>Go to Shared Tasks</button>
         </Link>
+      </div>
+      <div className="rightbar-bottom-buttons">
         <button onClick={() => navigate('/create-team')}>Create Team</button>
         <button onClick={() => navigate('/my-teams')}>My Teams</button>
       </div>
