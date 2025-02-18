@@ -16,7 +16,7 @@ const TeamDetailsBox = () => {
         },
       })
       .then((res) => {
-        setTeams(res.data);
+        setTeams(res.data || []); // Ensure teams is always an array
       })
       .catch((error) => {
         console.error("Error fetching teams:", error);
@@ -27,14 +27,18 @@ const TeamDetailsBox = () => {
     <div className="team-details-box">
       <h2>My Teams</h2>
       <Card.Group>
-        {teams.map((team) => (
-          <Card key={team.id}>
-            <Card.Content>
-              <Card.Header>{team.name}</Card.Header>
-              <Button onClick={() => navigate(`/team/${team.id}`)}>View Team</Button>
-            </Card.Content>
-          </Card>
-        ))}
+        {teams.length > 0 ? (
+          teams.map((team) => (
+            <Card key={team.id}>
+              <Card.Content>
+                <Card.Header>{team.name}</Card.Header>
+                <Button onClick={() => navigate(`/team/${team.id}`)}>View Team</Button>
+              </Card.Content>
+            </Card>
+          ))
+        ) : (
+          <p>Bhai tu koi team me nahi hai.</p>
+        )}
       </Card.Group>
     </div>
   );
