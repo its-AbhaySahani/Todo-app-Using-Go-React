@@ -36,3 +36,7 @@ func Connect() {
     DB = db
     fmt.Println("Connected to the database successfully")
 } -->
+
+
+## To run the updated docker app
+docker-compose up --build

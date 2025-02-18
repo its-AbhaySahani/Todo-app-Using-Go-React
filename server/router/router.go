@@ -36,7 +36,7 @@ func Router() *mux.Router {
     apiRouter.HandleFunc("/team/{teamId}/todo/{id}", middleware.UpdateTeamTodo).Methods("PUT")
     apiRouter.HandleFunc("/team/{teamId}/todo/{id}", middleware.DeleteTeamTodo).Methods("DELETE")
     apiRouter.HandleFunc("/team/{teamId}/members", middleware.GetTeamMembers).Methods("GET")
-    apiRouter.HandleFunc("/team/{teamId}/member", middleware.AddTeamMember).Methods("POST") // Add this route
+    apiRouter.HandleFunc("/team/{teamId}/member", middleware.AddTeamMember).Methods("POST")
     apiRouter.HandleFunc("/team/{teamId}/member/{userId}", middleware.RemoveTeamMember).Methods("DELETE")
 
     return router

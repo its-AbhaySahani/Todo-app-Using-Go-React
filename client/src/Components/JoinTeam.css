@@ -1,0 +1,27 @@
+.join-team-form {
+    padding: 20px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+  }
+  
+  .join-team-form h2 {
+    margin-bottom: 20px;
+  }
+  
+  .join-team-form .ui.form {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  .join-team-form .ui.button {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+  }
+  
+  .join-team-form .ui.button:hover {
+    background-color: var(--button-hover-bg-color);
+  }
+  
+  .join-team-form .ui.message {
+    margin-top: 20px;
+  }

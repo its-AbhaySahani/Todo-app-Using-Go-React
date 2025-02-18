@@ -185,9 +185,9 @@ func CreateTeam(name, password, adminID string) (Team, error) {
     return Team{ID: id, Name: name, Password: string(hashedPassword), AdminID: adminID}, nil
 }
 
-func JoinTeam(teamID, password, userID string) error {
-    var hashedPassword string
-    err := database.DB.QueryRow("SELECT password FROM teams WHERE id = ?", teamID).Scan(&hashedPassword)
+func JoinTeam(teamName, password, userID string) error {
+    var teamID, hashedPassword string
+    err := database.DB.QueryRow("SELECT id, password FROM teams WHERE name = ?", teamName).Scan(&teamID, &hashedPassword)
     if err != nil {
         return err
     }
@@ -310,3 +310,4 @@ func AddTeamMember(teamID, username, addedBy string) error {
     _, err = database.DB.Exec("INSERT INTO team_members (team_id, user_id) VALUES (?, ?)", teamID, user.ID)
     return err
 }
+

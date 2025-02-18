@@ -173,7 +173,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 func JoinTeam(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     var request struct {
-        TeamID   string `json:"teamId"`
+        TeamName string `json:"teamName"`
         Password string `json:"password"`
     }
     _ = json.NewDecoder(r.Body).Decode(&request)
@@ -182,7 +182,7 @@ func JoinTeam(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
-    err := models.JoinTeam(request.TeamID, request.Password, userID)
+    err := models.JoinTeam(request.TeamName, request.Password, userID)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -328,3 +328,5 @@ func AddTeamMember(w http.ResponseWriter, r *http.Request) {
     }
     json.NewEncoder(w).Encode(map[string]string{"result": "success"})
 }
+
+
