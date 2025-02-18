@@ -30,6 +30,38 @@ func main() {
 
     fmt.Println("Deleted dummy tasks")
 
+    // Delete dummy shared todos
+    _, err = db.Exec("DELETE FROM shared_todos WHERE task LIKE 'Shared Task %'")
+    if err != nil {
+        log.Fatal("Error deleting shared todos:", err)
+    }
+
+    fmt.Println("Deleted dummy shared todos")
+
+    // Delete dummy team todos
+    _, err = db.Exec("DELETE FROM team_todos WHERE task LIKE 'Team Task %'")
+    if err != nil {
+        log.Fatal("Error deleting team todos:", err)
+    }
+
+    fmt.Println("Deleted dummy team todos")
+
+    // Delete dummy team members
+    _, err = db.Exec("DELETE FROM team_members WHERE team_id IN (SELECT id FROM teams WHERE name LIKE 'Team %')")
+    if err != nil {
+        log.Fatal("Error deleting team members:", err)
+    }
+
+    fmt.Println("Deleted dummy team members")
+
+    // Delete dummy teams
+    _, err = db.Exec("DELETE FROM teams WHERE name LIKE 'Team %'")
+    if err != nil {
+        log.Fatal("Error deleting teams:", err)
+    }
+
+    fmt.Println("Deleted dummy teams")
+
     // Delete dummy users
     _, err = db.Exec("DELETE FROM users WHERE username LIKE 'user%'")
     if err != nil {

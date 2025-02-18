@@ -36,6 +36,16 @@ func main() {
             log.Fatal("Error hashing password:", err)
         }
 
+        // Check if the user already exists
+        var existingUserID string
+        err = db.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&existingUserID)
+        if err == nil {
+            // User already exists, skip insertion
+            continue
+        } else if err != sql.ErrNoRows {
+            log.Fatal("Error checking user existence:", err)
+        }
+
         _, err = db.Exec("INSERT INTO users (id, username, password) VALUES (?, ?, ?)", userID, username, string(hashedPassword))
         if err != nil {
             log.Fatal("Error inserting user:", err)
@@ -78,4 +88,71 @@ func main() {
     }
 
     fmt.Println("Inserted 1000 dummy tasks")
+
+    // Insert dummy shared todos
+    for i := 0; i < 100; i++ {
+        sharedTodoID := uuid.New().String()
+        task := fmt.Sprintf("Shared Task %d", i+1)
+        description := fmt.Sprintf("Description for shared task %d", i+1)
+        done := rand.Intn(2) == 1
+        important := rand.Intn(2) == 1
+        userID := userIDs[rand.Intn(len(userIDs))]
+        sharedBy := userIDs[rand.Intn(len(userIDs))]
+        date := time.Now().Format("2006-01-02")
+        time := time.Now().Format("15:04:05")
+
+        _, err = db.Exec("INSERT INTO shared_todos (id, task, description, done, important, user_id, date, time, shared_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", sharedTodoID, task, description, done, important, userID, date, time, sharedBy)
+        if err != nil {
+            log.Fatal("Error inserting shared todo:", err)
+        }
+    }
+
+    fmt.Println("Inserted 100 dummy shared todos")
+
+    // Insert dummy teams
+    for i := 0; i < 10; i++ {
+        teamID := uuid.New().String()
+        teamName := fmt.Sprintf("Team %d", i+1)
+        password := "password"
+        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+        if err != nil {
+            log.Fatal("Error hashing password:", err)
+        }
+        adminID := userIDs[rand.Intn(len(userIDs))]
+
+        _, err = db.Exec("INSERT INTO teams (id, name, password, admin_id) VALUES (?, ?, ?, ?)", teamID, teamName, string(hashedPassword), adminID)
+        if err != nil {
+            log.Fatal("Error inserting team:", err)
+        }
+
+        // Insert team members
+        for j := 0; j < 10; j++ {
+            userID := userIDs[rand.Intn(len(userIDs))]
+            isAdmin := rand.Intn(2) == 1
+
+            _, err = db.Exec("INSERT INTO team_members (team_id, user_id, is_admin) VALUES (?, ?, ?)", teamID, userID, isAdmin)
+            if err != nil {
+                log.Fatal("Error inserting team member:", err)
+            }
+        }
+
+        // Insert dummy team todos
+        for k := 0; k < 10; k++ {
+            teamTodoID := uuid.New().String()
+            task := fmt.Sprintf("Team Task %d", k+1)
+            description := fmt.Sprintf("Description for team task %d", k+1)
+            done := rand.Intn(2) == 1
+            important := rand.Intn(2) == 1
+            assignedTo := userIDs[rand.Intn(len(userIDs))]
+            date := time.Now().Format("2006-01-02")
+            time := time.Now().Format("15:04:05")
+
+            _, err = db.Exec("INSERT INTO team_todos (id, task, description, done, important, team_id, assigned_to, date, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", teamTodoID, task, description, done, important, teamID, assignedTo, date, time)
+            if err != nil {
+                log.Fatal("Error inserting team todo:", err)
+            }
+        }
+    }
+
+    fmt.Println("Inserted 10 dummy teams with members and 100 dummy team todos")
 }

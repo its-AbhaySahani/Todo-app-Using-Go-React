@@ -33,7 +33,7 @@ services:
       MYSQL_USER: Abhay
       MYSQL_PASSWORD: Abhay@123
     ports:
-      - "3306:3306"
+      - "5000:3306"
     volumes:
       - mysql-data:/var/lib/mysql
 
