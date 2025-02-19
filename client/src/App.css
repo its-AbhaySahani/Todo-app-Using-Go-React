@@ -56,5 +56,39 @@
 .main-content .content-container {
   width: 100%;
   max-width: 800px; /* Adjust the max-width as needed */
-  text-align: left; /* Align text to the left */
+  text-align: left;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 1200px) {
+  .main-content {
+    margin-left: 180px; 
+    margin-right: 180px; 
+  }
+}
+
+@media (max-width: 992px) {
+  .main-content {
+    margin-left: 150px; 
+    margin-right: 150px; 
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0; 
+    margin-right: 0; 
+    padding-top: 60px; 
+  }
+
+  .header-container {
+    left: 0; 
+    right: 0; 
+    width: 100%; 
+  }
+
+  .leftbar-container,
+  .rightbar-container {
+    display: none; 
+  }
 }

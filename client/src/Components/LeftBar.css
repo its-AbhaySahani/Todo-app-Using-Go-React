@@ -40,3 +40,10 @@
   .leftbar-menu button:hover {
     background-color: var(--button-hover-bg-color);
   }
+
+  /* Media queries for responsiveness */
+@media (max-width: 768px) {
+  .leftbar-container {
+    display: none; /* Hide sidebar on smaller screens */
+  }
+}
