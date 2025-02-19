@@ -1,9 +1,9 @@
 .team-page {
   padding: 20px;
-  padding-top: 80px; /* Add padding to the top to account for the header */
+  padding-top: 20px; /* Add padding to the top to account for the header */
   background-color: var(--background-color);
   color: var(--text-color);
-  height: calc(100vh - 10px); /* Adjust height to account for the header */
+  height: calc(100vh - 80px); /* Adjust height to account for the header */
 }
 
 .team-header {

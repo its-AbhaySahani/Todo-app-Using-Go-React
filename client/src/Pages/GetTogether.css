@@ -1,7 +1,9 @@
 .get-together {
   padding: 20px;
+  padding-top: 20px;
   background-color: var(--background-color);
   color: var(--text-color);
+  height: calc(100vh - 80px);
 }
 
 .button-group {
