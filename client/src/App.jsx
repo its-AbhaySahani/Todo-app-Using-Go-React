@@ -54,19 +54,23 @@ function AppContent({ filter, setFilter, isAuthenticated, setIsAuthenticated }) 
     <>
       <LeftBar setFilter={setFilter} isTeamPage={isTeamPage} />
       <RightBar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
-      <Container style={{ marginLeft: '220px', marginRight: '220px' }}>
-        <Routes>
-          <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/" element={<ToDoList filter={filter} />} />
-          <Route path="/get-together" element={<GetTogether />} />
-          <Route path="/create-team" element={<CreateTeamForm />} />
-          <Route path="/my-teams" element={<TeamDetailsBox />} />
-          <Route path="/team/:teamId" element={<TeamPage filter={filter} />} />
-          <Route path="/team/:teamId/people" element={<PeoplePage />} />
-          <Route path="/team/:teamId/add-member" element={<AddMemberPage />} /> {/* Add AddMemberPage route */}
-        </Routes>
-      </Container>
+      <div className="main-content">
+        <div className="content-container">
+          <Container>
+            <Routes>
+              <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/" element={<ToDoList filter={filter} />} />
+              <Route path="/get-together" element={<GetTogether />} />
+              <Route path="/create-team" element={<CreateTeamForm />} />
+              <Route path="/my-teams" element={<TeamDetailsBox />} />
+              <Route path="/team/:teamId" element={<TeamPage filter={filter} />} />
+              <Route path="/team/:teamId/people" element={<PeoplePage />} />
+              <Route path="/team/:teamId/add-member" element={<AddMemberPage />} /> {/* Add AddMemberPage route */}
+            </Routes>
+          </Container>
+        </div>
+      </div>
     </>
   );
 }
