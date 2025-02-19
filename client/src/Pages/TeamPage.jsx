@@ -6,13 +6,15 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import TextField from "@mui/material/TextField";
+import moment from "moment";
 import Box from "../Box";
 import "./TeamPage.css";
 
-const TeamPage = () => {
+const TeamPage = ({ filter }) => {
   const { teamId } = useParams();
   const [team, setTeam] = useState({});
   const [tasks, setTasks] = useState([]); // Initialize tasks to an empty array
+  const [filteredTasks, setFilteredTasks] = useState([]); // State for filtered tasks
   const [modalOpen, setModalOpen] = useState(false);
   const [task, setTask] = useState("");
   const [description, setDescription] = useState("");
@@ -36,6 +38,27 @@ const TeamPage = () => {
         console.error("Error fetching team details:", error);
       });
   }, [teamId]);
+
+  useEffect(() => {
+    applyFilter();
+  }, [filter, tasks]);
+
+  const applyFilter = () => {
+    const today = moment().format("YYYY-MM-DD");
+    let filteredTasks = tasks;
+
+    if (filter === 'today') {
+      filteredTasks = tasks.filter(task => task.date === today);
+    } else if (filter === 'important') {
+      filteredTasks = tasks.filter(task => task.important);
+    } else if (filter === 'completed') {
+      filteredTasks = tasks.filter(task => task.done);
+    } else if (filter === 'incomplete') {
+      filteredTasks = tasks.filter(task => !task.done);
+    }
+
+    setFilteredTasks(filteredTasks);
+  };
 
   const handleAddTask = () => {
     const token = localStorage.getItem("token");
@@ -86,7 +109,7 @@ const TeamPage = () => {
               </Card.Header>
             </Card.Content>
           </Card>
-          {tasks.map((task) => (
+          {filteredTasks.map((task) => (
             <Box key={task.id} item={task} />
           ))}
         </Card.Group>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import "./App.css";
 import { Container } from "semantic-ui-react";
 import ToDoList from "./To-do-lists";
@@ -32,16 +32,15 @@ function App() {
       <div className="app-container">
         <Aurora colorStops={["#3a3a66", "#7a7aed", "#9a48ad"]} speed={1} />
         <HeaderComp />
-        <LeftBar setFilter={setFilter} />
-        <RightBar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
-        <AppContent filter={filter} isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+        <AppContent filter={filter} setFilter={setFilter} isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
       </div>
     </Router>
   );
 }
 
-function AppContent({ filter, isAuthenticated, setIsAuthenticated }) {
+function AppContent({ filter, setFilter, isAuthenticated, setIsAuthenticated }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -49,20 +48,26 @@ function AppContent({ filter, isAuthenticated, setIsAuthenticated }) {
     navigate("/login");
   };
 
+  const isTeamPage = location.pathname.startsWith("/team/");
+
   return (
-    <Container style={{ marginLeft: '220px', marginRight: '220px' }}>
-      <Routes>
-        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/" element={<ToDoList filter={filter} />} />
-        <Route path="/get-together" element={<GetTogether />} />
-        <Route path="/create-team" element={<CreateTeamForm />} />
-        <Route path="/my-teams" element={<TeamDetailsBox />} />
-        <Route path="/team/:teamId" element={<TeamPage />} />
-        <Route path="/team/:teamId/people" element={<PeoplePage />} />
-        <Route path="/team/:teamId/add-member" element={<AddMemberPage />} /> {/* Add AddMemberPage route */}
-      </Routes>
-    </Container>
+    <>
+      <LeftBar setFilter={setFilter} isTeamPage={isTeamPage} />
+      <RightBar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+      <Container style={{ marginLeft: '220px', marginRight: '220px' }}>
+        <Routes>
+          <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/" element={<ToDoList filter={filter} />} />
+          <Route path="/get-together" element={<GetTogether />} />
+          <Route path="/create-team" element={<CreateTeamForm />} />
+          <Route path="/my-teams" element={<TeamDetailsBox />} />
+          <Route path="/team/:teamId" element={<TeamPage filter={filter} />} />
+          <Route path="/team/:teamId/people" element={<PeoplePage />} />
+          <Route path="/team/:teamId/add-member" element={<AddMemberPage />} /> {/* Add AddMemberPage route */}
+        </Routes>
+      </Container>
+    </>
   );
 }
 
