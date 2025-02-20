@@ -3,13 +3,15 @@ package shared_todos_repository
 import (
 	"database/sql"
 
-	"github.com/its-AbhaySahani/Todo-app-Using-Go-React/server/models/db"
-	
-	//"github.com/its-AbhaySahani/Todo-app-Using-Go-React/server/persistent/models/db"
+	"github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
+	"github.com/its-AbhaySahani/Todo-app-Using-Go-React/models/db"
 )
 
-func NewSharedTodoQueries(db *sql.DB) *db.Queries {
-	querier := db.New(db)
-	return &sharedTodoRepository{querier: querier}
+func NewSharedTodoQueries(DB *sql.DB) *db.Queries {
+    return db.New(DB)
+}
 
+func NewSharedTodoRepository(DB *sql.DB) domain.SharedTodoRepository {
+	querier := db.New(DB)
+	return &SharedTodoRepository{querier: querier}
 }

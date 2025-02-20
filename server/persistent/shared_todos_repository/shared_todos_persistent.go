@@ -6,18 +6,18 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/Todo-app-Using-Go-React/server/domain"
-	"github.com/its-AbhaySahani/Todo-app-Using-Go-React/server/models/db"
+	"github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
+	"github.com/its-AbhaySahani/Todo-app-Using-Go-React/models/db"
 )
-///home/abhaysahani/Projects/Todo-app-Using-Go-React/server/domain
-type sharedTodoRepository struct {
+
+type SharedTodoRepository struct {
 	querier *db.Queries
 }
 
-func (r *sharedTodoRepository) CreateSharedTodo(ctx context.Context, task, description string, done, important bool, userID, sharedBy string) error {
+func (r *SharedTodoRepository) CreateSharedTodo(ctx context.Context, task, description string, done, important bool, userID, sharedBy string) error {
 	id := uuid.New().String()
 	date := time.Now()
-	time := time.Now()
+	timeNow := time.Now()
 	return r.querier.CreateSharedTodo(ctx, db.CreateSharedTodoParams{
 		ID:          id,
 		Task:        sql.NullString{String: task, Valid: true},
@@ -26,12 +26,12 @@ func (r *sharedTodoRepository) CreateSharedTodo(ctx context.Context, task, descr
 		Important:   sql.NullBool{Bool: important, Valid: true},
 		UserID:      sql.NullString{String: userID, Valid: true},
 		Date:        sql.NullTime{Time: date, Valid: true},
-		Time:        sql.NullTime{Time: time, Valid: true},
+		Time:        sql.NullTime{Time: timeNow, Valid: true},
 		SharedBy:    sql.NullString{String: sharedBy, Valid: true},
 	})
 }
 
-func (r *sharedTodoRepository) GetSharedTodos(ctx context.Context, userID string) ([]domain.SharedTodo, error) {
+func (r *SharedTodoRepository) GetSharedTodos(ctx context.Context, userID string) ([]domain.SharedTodo, error) {
 	todos, err := r.querier.GetSharedTodos(ctx, sql.NullString{String: userID, Valid: true})
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (r *sharedTodoRepository) GetSharedTodos(ctx context.Context, userID string
 	return result, nil
 }
 
-func (r *sharedTodoRepository) GetSharedByMeTodos(ctx context.Context, sharedBy string) ([]domain.SharedTodo, error) {
+func (r *SharedTodoRepository) GetSharedByMeTodos(ctx context.Context, sharedBy string) ([]domain.SharedTodo, error) {
 	todos, err := r.querier.GetSharedByMeTodos(ctx, sql.NullString{String: sharedBy, Valid: true})
 	if err != nil {
 		return nil, err
