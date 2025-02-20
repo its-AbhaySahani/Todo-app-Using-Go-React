@@ -1,18 +1,18 @@
-# Todo-app-Using-Go-React
-
-<!-- package database
+package infra
 
 import (
     "database/sql"
     "fmt"
+    "log"
     "time"
+
     _ "github.com/go-sql-driver/mysql"
 )
 
 var DB *sql.DB
 
 func Connect() {
-    dsn := "Abhay:Abhay@123@tcp(mysql:3306)/Todo_app"
+    dsn := "Abhay:Abhay@123@tcp(127.0.0.1:3306)/Todo_app"
     var db *sql.DB
     var err error
 
@@ -29,17 +29,9 @@ func Connect() {
     }
 
     if err != nil {
-        fmt.Println("Error connecting to the database:", err)
-        return
+        log.Fatal("Error connecting to the database:", err)
     }
 
     DB = db
     fmt.Println("Connected to the database successfully")
-} -->
-
-
-## To run the updated docker app
-docker-compose up --build
-
-
-<!-- Please focus on the `server` directory and its contents located at `/home/abhaysahani/Projects/Todo-app-Using-Go-React/server`. -->
+}
