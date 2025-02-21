@@ -170,6 +170,36 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 	return err
 }
 
+const deleteTeamTodo = `-- name: DeleteTeamTodo :exec
+DELETE FROM team_todos
+WHERE id = ? AND team_id = ?
+`
+
+type DeleteTeamTodoParams struct {
+	ID     string
+	TeamID string
+}
+
+func (q *Queries) DeleteTeamTodo(ctx context.Context, arg DeleteTeamTodoParams) error {
+	_, err := q.db.ExecContext(ctx, deleteTeamTodo, arg.ID, arg.TeamID)
+	return err
+}
+
+const deleteTodo = `-- name: DeleteTodo :exec
+DELETE FROM todos
+WHERE id = ? AND user_id = ?
+`
+
+type DeleteTodoParams struct {
+	ID     string
+	UserID sql.NullString
+}
+
+func (q *Queries) DeleteTodo(ctx context.Context, arg DeleteTodoParams) error {
+	_, err := q.db.ExecContext(ctx, deleteTodo, arg.ID, arg.UserID)
+	return err
+}
+
 const getSharedByMeTodos = `-- name: GetSharedByMeTodos :many
 SELECT id, task, description, done, important, user_id, date, time, shared_by
 FROM shared_todos
@@ -246,6 +276,24 @@ func (q *Queries) GetSharedTodos(ctx context.Context, userID sql.NullString) ([]
 		return nil, err
 	}
 	return items, nil
+}
+
+const getTeamByID = `-- name: GetTeamByID :one
+SELECT id, name, password, admin_id
+FROM teams
+WHERE id = ?
+`
+
+func (q *Queries) GetTeamByID(ctx context.Context, id string) (Team, error) {
+	row := q.db.QueryRowContext(ctx, getTeamByID, id)
+	var i Team
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Password,
+		&i.AdminID,
+	)
+	return i, err
 }
 
 const getTeamMembers = `-- name: GetTeamMembers :many
@@ -399,4 +447,133 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 	var i User
 	err := row.Scan(&i.ID, &i.Username, &i.Password)
 	return i, err
+}
+
+const joinTeam = `-- name: JoinTeam :exec
+INSERT INTO team_members (team_id, user_id, is_admin)
+SELECT id, ?, false
+FROM teams
+WHERE name = ? AND password = ?
+`
+
+type JoinTeamParams struct {
+	UserID   string
+	Name     string
+	Password string
+}
+
+func (q *Queries) JoinTeam(ctx context.Context, arg JoinTeamParams) error {
+	_, err := q.db.ExecContext(ctx, joinTeam, arg.UserID, arg.Name, arg.Password)
+	return err
+}
+
+const removeTeamMember = `-- name: RemoveTeamMember :exec
+DELETE FROM team_members
+WHERE team_id = ? AND user_id = ?
+`
+
+type RemoveTeamMemberParams struct {
+	TeamID string
+	UserID string
+}
+
+func (q *Queries) RemoveTeamMember(ctx context.Context, arg RemoveTeamMemberParams) error {
+	_, err := q.db.ExecContext(ctx, removeTeamMember, arg.TeamID, arg.UserID)
+	return err
+}
+
+const shareTodoWithUser = `-- name: ShareTodoWithUser :exec
+INSERT INTO shared_todos (id, task, description, done, important, user_id, date, time, shared_by)
+SELECT ?, task, description, done, important, (SELECT id FROM users WHERE username = ?), date, time, ?
+FROM todos
+WHERE todos.id = ?
+`
+
+type ShareTodoWithUserParams struct {
+	ID       string
+	Username string
+	SharedBy sql.NullString
+	ID_2     string
+}
+
+func (q *Queries) ShareTodoWithUser(ctx context.Context, arg ShareTodoWithUserParams) error {
+	_, err := q.db.ExecContext(ctx, shareTodoWithUser,
+		arg.ID,
+		arg.Username,
+		arg.SharedBy,
+		arg.ID_2,
+	)
+	return err
+}
+
+const undoTodo = `-- name: UndoTodo :exec
+UPDATE todos
+SET done = false
+WHERE id = ? AND user_id = ?
+`
+
+type UndoTodoParams struct {
+	ID     string
+	UserID sql.NullString
+}
+
+func (q *Queries) UndoTodo(ctx context.Context, arg UndoTodoParams) error {
+	_, err := q.db.ExecContext(ctx, undoTodo, arg.ID, arg.UserID)
+	return err
+}
+
+const updateTeamTodo = `-- name: UpdateTeamTodo :exec
+UPDATE team_todos
+SET task = ?, description = ?, done = ?, important = ?, assigned_to = ?
+WHERE id = ? AND team_id = ?
+`
+
+type UpdateTeamTodoParams struct {
+	Task        string
+	Description sql.NullString
+	Done        bool
+	Important   sql.NullBool
+	AssignedTo  sql.NullString
+	ID          string
+	TeamID      string
+}
+
+func (q *Queries) UpdateTeamTodo(ctx context.Context, arg UpdateTeamTodoParams) error {
+	_, err := q.db.ExecContext(ctx, updateTeamTodo,
+		arg.Task,
+		arg.Description,
+		arg.Done,
+		arg.Important,
+		arg.AssignedTo,
+		arg.ID,
+		arg.TeamID,
+	)
+	return err
+}
+
+const updateTodo = `-- name: UpdateTodo :exec
+UPDATE todos
+SET task = ?, description = ?, done = ?, important = ?
+WHERE id = ? AND user_id = ?
+`
+
+type UpdateTodoParams struct {
+	Task        string
+	Description sql.NullString
+	Done        bool
+	Important   bool
+	ID          string
+	UserID      sql.NullString
+}
+
+func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) error {
+	_, err := q.db.ExecContext(ctx, updateTodo,
+		arg.Task,
+		arg.Description,
+		arg.Done,
+		arg.Important,
+		arg.ID,
+		arg.UserID,
+	)
+	return err
 }
