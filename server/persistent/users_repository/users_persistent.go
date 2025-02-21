@@ -4,8 +4,13 @@ import (
     "context"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models/db"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/dto"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
 )
 
+type UserServiceRepository interface {
+    CreateUser(ctx context.Context, username, password string) error
+    GetUserByUsername(ctx context.Context, username string) (domain.User, error)
+}
 type UserRepository struct {
     querier *db.Queries
 }

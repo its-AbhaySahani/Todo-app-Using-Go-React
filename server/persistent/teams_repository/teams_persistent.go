@@ -4,8 +4,14 @@ import (
     "context"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models/db"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/dto"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
 )
 
+type TeamServiceRepository interface {
+    CreateTeam(ctx context.Context, name, password, adminID string) error
+    GetTeamsByAdminID(ctx context.Context, adminID string) ([]domain.Team, error)
+    GetTeamByID(ctx context.Context, id string) (domain.Team, error)
+}
 type TeamRepository struct {
     querier *db.Queries
 }

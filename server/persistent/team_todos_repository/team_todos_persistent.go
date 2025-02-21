@@ -4,7 +4,15 @@ import (
     "context"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models/db"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/dto"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
 )
+
+type TeamTodoServiceRepository interface {
+    CreateTeamTodo(ctx context.Context, task, description string, done, important bool, teamID, assignedTo string) error
+    GetTeamTodos(ctx context.Context, teamID string) ([]domain.TeamTodo, error)
+    UpdateTeamTodo(ctx context.Context, id, task, description string, done, important bool, teamID, assignedTo string) error
+    DeleteTeamTodo(ctx context.Context, id, teamID string) error
+}
 
 type TeamTodoRepository struct {
     querier *db.Queries

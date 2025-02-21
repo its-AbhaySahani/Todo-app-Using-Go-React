@@ -1,7 +1,6 @@
 package domain
 
 import (
-    "context"
     "time"
 )
 
@@ -15,11 +14,4 @@ type TeamTodo struct {
     AssignedTo  string
     Date        time.Time
     Time        time.Time
-}
-
-type TeamTodoRepository interface {
-    CreateTeamTodo(ctx context.Context, task, description string, done, important bool, teamID, assignedTo string) error
-    GetTeamTodos(ctx context.Context, teamID string) ([]TeamTodo, error)
-    UpdateTeamTodo(ctx context.Context, id, task, description string, done, important bool, teamID, assignedTo string) error
-    DeleteTeamTodo(ctx context.Context, id, teamID string) error
 }
