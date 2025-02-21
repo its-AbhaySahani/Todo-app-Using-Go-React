@@ -2,72 +2,47 @@ package team_todos_repository
 
 import (
     "context"
-    "database/sql"
-    "time"
-
-    "github.com/google/uuid"
-    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models/db"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/dto"
 )
 
 type TeamTodoRepository struct {
     querier *db.Queries
 }
 
-func (r *TeamTodoRepository) CreateTeamTodo(ctx context.Context, task, description string, done, important bool, teamID, assignedTo string) error {
-    id := uuid.New().String()
-    date := time.Now()
-    timeNow := time.Now()
-    return r.querier.CreateTeamTodo(ctx, db.CreateTeamTodoParams{
-        ID:          id,
-        Task:        task,
-        Description: sql.NullString{String: description, Valid: true},
-        Done:        done,
-        Important:   sql.NullBool{Bool: important, Valid: true},
-        TeamID:      teamID,
-        AssignedTo:  sql.NullString{String: assignedTo, Valid: true},
-        Date:        sql.NullTime{Time: date, Valid: true},
-        Time:        sql.NullTime{Time: timeNow, Valid: true},
-    })
+func (r *TeamTodoRepository) CreateTeamTodo(ctx context.Context, req *dto.CreateTeamTodoRequest) (*dto.CreateResponse, error) {
+    params := req.ConvertCreateTeamTodoDomainRequestToPersistentRequest()
+    err := r.querier.CreateTeamTodo(ctx, *params)
+    if err != nil {
+        return nil, err
+    }
+    return &dto.CreateResponse{ID: params.ID}, nil
 }
 
-func (r *TeamTodoRepository) GetTeamTodos(ctx context.Context, teamID string) ([]domain.TeamTodo, error) {
+func (r *TeamTodoRepository) GetTeamTodos(ctx context.Context, teamID string) (*dto.TeamTodosResponse, error) {
     todos, err := r.querier.GetTeamTodos(ctx, teamID)
     if err != nil {
         return nil, err
     }
-    var result []domain.TeamTodo
-    for _, todo := range todos {
-        result = append(result, domain.TeamTodo{
-            ID:          todo.ID,
-            Task:        todo.Task,
-            Description: todo.Description.String,
-            Done:        todo.Done,
-            Important:   todo.Important.Bool,
-            TeamID:      todo.TeamID,
-            AssignedTo:  todo.AssignedTo.String,
-            Date:        todo.Date.Time,
-            Time:        todo.Time.Time,
-        })
+    return dto.NewTeamTodosResponse(todos), nil
+}
+
+func (r *TeamTodoRepository) UpdateTeamTodo(ctx context.Context, req *dto.UpdateTeamTodoRequest) (*dto.SuccessResponse, error) {
+    params := req.ConvertUpdateTeamTodoDomainRequestToPersistentRequest()
+    err := r.querier.UpdateTeamTodo(ctx, *params)
+    if err != nil {
+        return nil, err
     }
-    return result, nil
+    return &dto.SuccessResponse{Success: true}, nil
 }
 
-func (r *TeamTodoRepository) UpdateTeamTodo(ctx context.Context, id, task, description string, done, important bool, teamID, assignedTo string) error {
-    return r.querier.UpdateTeamTodo(ctx, db.UpdateTeamTodoParams{
-        ID:          id,
-        Task:        task,
-        Description: sql.NullString{String: description, Valid: true},
-        Done:        done,
-        Important:   sql.NullBool{Bool: important, Valid: true},
-        TeamID:      teamID,
-        AssignedTo:  sql.NullString{String: assignedTo, Valid: true},
-    })
-}
-
-func (r *TeamTodoRepository) DeleteTeamTodo(ctx context.Context, id, teamID string) error {
-    return r.querier.DeleteTeamTodo(ctx, db.DeleteTeamTodoParams{
+func (r *TeamTodoRepository) DeleteTeamTodo(ctx context.Context, id, teamID string) (*dto.SuccessResponse, error) {
+    err := r.querier.DeleteTeamTodo(ctx, db.DeleteTeamTodoParams{
         ID:     id,
         TeamID: teamID,
     })
+    if err != nil {
+        return nil, err
+    }
+    return &dto.SuccessResponse{Success: true}, nil
 }

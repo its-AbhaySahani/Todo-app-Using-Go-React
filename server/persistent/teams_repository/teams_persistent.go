@@ -2,52 +2,35 @@ package teams_repository
 
 import (
     "context"
-
-    "github.com/google/uuid"
-    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models/db"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/dto"
 )
 
 type TeamRepository struct {
     querier *db.Queries
 }
 
-func (r *TeamRepository) CreateTeam(ctx context.Context, name, password, adminID string) error {
-    id := uuid.New().String()
-    return r.querier.CreateTeam(ctx, db.CreateTeamParams{
-        ID:       id,
-        Name:     name,
-        Password: password,
-        AdminID:  adminID,
-    })
+func (r *TeamRepository) CreateTeam(ctx context.Context, req *dto.CreateTeamRequest) (*dto.CreateResponse, error) {
+    params := req.ConvertCreateTeamDomainRequestToPersistentRequest()
+    err := r.querier.CreateTeam(ctx, *params)
+    if err != nil {
+        return nil, err
+    }
+    return &dto.CreateResponse{ID: params.ID}, nil
 }
 
-func (r *TeamRepository) GetTeamsByAdminID(ctx context.Context, adminID string) ([]domain.Team, error) {
+func (r *TeamRepository) GetTeamsByAdminID(ctx context.Context, adminID string) (*dto.TeamsResponse, error) {
     teams, err := r.querier.GetTeamsByAdminID(ctx, adminID)
     if err != nil {
         return nil, err
     }
-    var result []domain.Team
-    for _, team := range teams {
-        result = append(result, domain.Team{
-            ID:       team.ID,
-            Name:     team.Name,
-            Password: team.Password,
-            AdminID:  team.AdminID,
-        })
-    }
-    return result, nil
+    return dto.NewTeamsResponse(teams), nil
 }
 
-func (r *TeamRepository) GetTeamByID(ctx context.Context, id string) (domain.Team, error) {
+func (r *TeamRepository) GetTeamByID(ctx context.Context, id string) (*dto.TeamResponse, error) {
     team, err := r.querier.GetTeamByID(ctx, id)
     if err != nil {
-        return domain.Team{}, err
+        return nil, err
     }
-    return domain.Team{
-        ID:       team.ID,
-        Name:     team.Name,
-        Password: team.Password,
-        AdminID:  team.AdminID,
-    }, nil
+    return dto.NewTeamResponse(&team), nil
 }

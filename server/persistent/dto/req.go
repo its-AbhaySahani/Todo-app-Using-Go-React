@@ -1,7 +1,23 @@
 package dto
 
-// Shared Todos Converters
-func (req *CreateSharedTodoRequest) ToParams() *db.CreateSharedTodoParams {
+import (
+    "database/sql"
+    "time"
+    "github.com/google/uuid"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models/db"
+)
+
+// Shared Todos
+type CreateSharedTodoRequest struct {
+    Task        string `json:"task"`
+    Description string `json:"description"`
+    Done        bool   `json:"done"`
+    Important   bool   `json:"important"`
+    UserID      string `json:"user_id"`
+    SharedBy    string `json:"shared_by"`
+}
+
+func (req *CreateSharedTodoRequest) ConvertCreateSharedTodoDomainRequestToPersistentRequest() *db.CreateSharedTodoParams {
     return &db.CreateSharedTodoParams{
         ID:          uuid.New().String(),
         Task:        sql.NullString{String: req.Task, Valid: true},
@@ -15,8 +31,14 @@ func (req *CreateSharedTodoRequest) ToParams() *db.CreateSharedTodoParams {
     }
 }
 
-// Team Members Converters
-func (req *AddTeamMemberRequest) ToParams() *db.AddTeamMemberParams {
+// Team Members
+type AddTeamMemberRequest struct {
+    TeamID  string `json:"team_id"`
+    UserID  string `json:"user_id"`
+    IsAdmin bool   `json:"is_admin"`
+}
+
+func (req *AddTeamMemberRequest) ConvertAddTeamMemberDomainRequestToPersistentRequest() *db.AddTeamMemberParams {
     return &db.AddTeamMemberParams{
         TeamID:  req.TeamID,
         UserID:  req.UserID,
@@ -24,15 +46,18 @@ func (req *AddTeamMemberRequest) ToParams() *db.AddTeamMemberParams {
     }
 }
 
-func (req *RemoveTeamMemberRequest) ToParams() *db.RemoveTeamMemberParams {
-    return &db.RemoveTeamMemberParams{
-        TeamID: req.TeamID,
-        UserID: req.UserID,
-    }
+
+// Team Todos
+type CreateTeamTodoRequest struct {
+    Task        string `json:"task"`
+    Description string `json:"description"`
+    Done        bool   `json:"done"`
+    Important   bool   `json:"important"`
+    TeamID      string `json:"team_id"`
+    AssignedTo  string `json:"assigned_to"`
 }
 
-// Team Todos Converters
-func (req *CreateTeamTodoRequest) ToParams() *db.CreateTeamTodoParams {
+func (req *CreateTeamTodoRequest) ConvertCreateTeamTodoDomainRequestToPersistentRequest() *db.CreateTeamTodoParams {
     return &db.CreateTeamTodoParams{
         ID:          uuid.New().String(),
         Task:        req.Task,
@@ -46,7 +71,17 @@ func (req *CreateTeamTodoRequest) ToParams() *db.CreateTeamTodoParams {
     }
 }
 
-func (req *UpdateTeamTodoRequest) ToParams() *db.UpdateTeamTodoParams {
+type UpdateTeamTodoRequest struct {
+    ID          string `json:"id"`
+    Task        string `json:"task"`
+    Description string `json:"description"`
+    Done        bool   `json:"done"`
+    Important   bool   `json:"important"`
+    TeamID      string `json:"team_id"`
+    AssignedTo  string `json:"assigned_to"`
+}
+
+func (req *UpdateTeamTodoRequest) ConvertUpdateTeamTodoDomainRequestToPersistentRequest() *db.UpdateTeamTodoParams {
     return &db.UpdateTeamTodoParams{
         ID:          req.ID,
         Task:        req.Task,
@@ -58,8 +93,14 @@ func (req *UpdateTeamTodoRequest) ToParams() *db.UpdateTeamTodoParams {
     }
 }
 
-// Teams Converters
-func (req *CreateTeamRequest) ToParams() *db.CreateTeamParams {
+// Teams
+type CreateTeamRequest struct {
+    Name     string `json:"name"`
+    Password string `json:"password"`
+    AdminID  string `json:"admin_id"`
+}
+
+func (req *CreateTeamRequest) ConvertCreateTeamDomainRequestToPersistentRequest() *db.CreateTeamParams {
     return &db.CreateTeamParams{
         ID:       uuid.New().String(),
         Name:     req.Name,
@@ -68,8 +109,16 @@ func (req *CreateTeamRequest) ToParams() *db.CreateTeamParams {
     }
 }
 
-// Todos Converters
-func (req *CreateTodoRequest) ToParams() *db.CreateTodoParams {
+// Todos
+type CreateTodoRequest struct {
+    Task        string `json:"task"`
+    Description string `json:"description"`
+    Done        bool   `json:"done"`
+    Important   bool   `json:"important"`
+    UserID      string `json:"user_id"`
+}
+
+func (req *CreateTodoRequest) ConvertCreateTodoDomainRequestToPersistentRequest() *db.CreateTodoParams {
     return &db.CreateTodoParams{
         ID:          uuid.New().String(),
         Task:        req.Task,
@@ -82,7 +131,16 @@ func (req *CreateTodoRequest) ToParams() *db.CreateTodoParams {
     }
 }
 
-func (req *UpdateTodoRequest) ToParams() *db.UpdateTodoParams {
+type UpdateTodoRequest struct {
+    ID          string `json:"id"`
+    Task        string `json:"task"`
+    Description string `json:"description"`
+    Done        bool   `json:"done"`
+    Important   bool   `json:"important"`
+    UserID      string `json:"user_id"`
+}
+
+func (req *UpdateTodoRequest) ConvertUpdateTodoDomainRequestToPersistentRequest() *db.UpdateTodoParams {
     return &db.UpdateTodoParams{
         ID:          req.ID,
         Task:        req.Task,
@@ -93,8 +151,13 @@ func (req *UpdateTodoRequest) ToParams() *db.UpdateTodoParams {
     }
 }
 
-// Users Converters
-func (req *CreateUserRequest) ToParams() *db.CreateUserParams {
+// Users
+type CreateUserRequest struct {
+    Username string `json:"username"`
+    Password string `json:"password"`
+}
+
+func (req *CreateUserRequest) ConvertCreateUserDomainRequestToPersistentRequest() *db.CreateUserParams {
     return &db.CreateUserParams{
         ID:       uuid.New().String(),
         Username: req.Username,

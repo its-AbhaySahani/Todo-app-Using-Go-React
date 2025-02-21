@@ -1,6 +1,102 @@
 package dto
 
-// Shared Todos Converters
+import (
+    "time"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models/db"
+)
+
+// Shared Todos Responses
+type SharedTodoResponse struct {
+    ID          string    `json:"id"`
+    Task        string    `json:"task"`
+    Description string    `json:"description"`
+    Done        bool      `json:"done"`
+    Important   bool      `json:"important"`
+    UserID      string    `json:"user_id"`
+    Date        time.Time `json:"date"`
+    Time        time.Time `json:"time"`
+    SharedBy    string    `json:"shared_by"`
+}
+
+type SharedTodosResponse struct {
+    Received []SharedTodoResponse `json:"received"`
+    Shared   []SharedTodoResponse `json:"shared"`
+}
+
+// Team Members Responses
+type TeamMemberResponse struct {
+    TeamID  string `json:"team_id"`
+    UserID  string `json:"user_id"`
+    IsAdmin bool   `json:"is_admin"`
+}
+
+type TeamMembersResponse struct {
+    Members []TeamMemberResponse `json:"members"`
+}
+
+// Team Todos Responses
+type TeamTodoResponse struct {
+    ID          string    `json:"id"`
+    Task        string    `json:"task"`
+    Description string    `json:"description"`
+    Done        bool      `json:"done"`
+    Important   bool      `json:"important"`
+    TeamID      string    `json:"team_id"`
+    AssignedTo  string    `json:"assigned_to"`
+    Date        time.Time `json:"date"`
+    Time        time.Time `json:"time"`
+}
+
+type TeamTodosResponse struct {
+    Todos []TeamTodoResponse `json:"todos"`
+}
+
+// Teams Responses
+type TeamResponse struct {
+    ID       string `json:"id"`
+    Name     string `json:"name"`
+    Password string `json:"password,omitempty"`
+    AdminID  string `json:"admin_id"`
+}
+
+type TeamsResponse struct {
+    Teams []TeamResponse `json:"teams"`
+}
+
+// Todos Responses
+type TodoResponse struct {
+    ID          string    `json:"id"`
+    Task        string    `json:"task"`
+    Description string    `json:"description"`
+    Done        bool      `json:"done"`
+    Important   bool      `json:"important"`
+    UserID      string    `json:"user_id"`
+    Date        time.Time `json:"date"`
+    Time        time.Time `json:"time"`
+}
+
+type TodosResponse struct {
+    Todos []TodoResponse `json:"todos"`
+}
+
+// Users Responses
+type UserResponse struct {
+    ID       string `json:"id"`
+    Username string `json:"username"`
+    Password string `json:"password,omitempty"`
+}
+
+// Success Responses
+type SuccessResponse struct {
+    Success bool   `json:"success"`
+    Message string `json:"message,omitempty"`
+}
+
+type CreateResponse struct {
+    ID string `json:"id"`
+}
+
+// Converters
 func NewSharedTodoResponse(todo *db.SharedTodo) *SharedTodoResponse {
     return &SharedTodoResponse{
         ID:          todo.ID,
@@ -23,7 +119,6 @@ func NewSharedTodosResponse(todos []db.SharedTodo) *SharedTodosResponse {
     return &response
 }
 
-// Team Members Converters
 func NewTeamMemberResponse(member *db.TeamMember) *TeamMemberResponse {
     return &TeamMemberResponse{
         TeamID:  member.TeamID,
@@ -40,7 +135,6 @@ func NewTeamMembersResponse(members []db.TeamMember) *TeamMembersResponse {
     return &response
 }
 
-// Team Todos Converters
 func NewTeamTodoResponse(todo *db.TeamTodo) *TeamTodoResponse {
     return &TeamTodoResponse{
         ID:          todo.ID,
@@ -63,7 +157,6 @@ func NewTeamTodosResponse(todos []db.TeamTodo) *TeamTodosResponse {
     return &response
 }
 
-// Teams Converters
 func NewTeamResponse(team *db.Team) *TeamResponse {
     return &TeamResponse{
         ID:       team.ID,
@@ -81,7 +174,6 @@ func NewTeamsResponse(teams []db.Team) *TeamsResponse {
     return &response
 }
 
-// Todos Converters
 func NewTodoResponse(todo *db.Todo) *TodoResponse {
     return &TodoResponse{
         ID:          todo.ID,
@@ -103,7 +195,6 @@ func NewTodosResponse(todos []db.Todo) *TodosResponse {
     return &response
 }
 
-// Users Converters
 func NewUserResponse(user *db.User) *UserResponse {
     return &UserResponse{
         ID:       user.ID,
