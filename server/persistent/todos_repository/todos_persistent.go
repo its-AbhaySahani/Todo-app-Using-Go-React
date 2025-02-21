@@ -13,6 +13,7 @@ type TodoServiceRepository interface {
     GetTodosByUserID(ctx context.Context, userID string) ([]domain.Todo, error)
     UpdateTodo(ctx context.Context, id, task, description string, done, important bool, userID string) error
     DeleteTodo(ctx context.Context, id, userID string) error
+    UndoTodo(ctx context.Context, id, userID string) error
 }
 type TodoRepository struct {
     querier *db.Queries
@@ -47,6 +48,17 @@ func (r *TodoRepository) UpdateTodo(ctx context.Context, req *dto.UpdateTodoRequ
 
 func (r *TodoRepository) DeleteTodo(ctx context.Context, id, userID string) (*dto.SuccessResponse, error) {
     err := r.querier.DeleteTodo(ctx, db.DeleteTodoParams{
+        ID:     id,
+        UserID: sql.NullString{String: userID, Valid: true},
+    })
+    if err != nil {
+        return nil, err
+    }
+    return &dto.SuccessResponse{Success: true}, nil
+}
+
+func (r *TodoRepository) UndoTodo(ctx context.Context, id, userID string) (*dto.SuccessResponse, error) {
+    err := r.querier.UndoTodo(ctx, db.UndoTodoParams{
         ID:     id,
         UserID: sql.NullString{String: userID, Valid: true},
     })
