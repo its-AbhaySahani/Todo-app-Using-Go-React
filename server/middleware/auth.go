@@ -6,7 +6,7 @@ import (
     "net/http"
     "time"
     "github.com/dgrijalva/jwt-go"
-    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/OLDmodels"
 )
 
 var jwtKey = []byte("ZLR+ZInOHXQst1seVlV6JVuZe1k3vasV1BRyqAHAyaY=")

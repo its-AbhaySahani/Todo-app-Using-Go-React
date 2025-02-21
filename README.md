@@ -40,3 +40,6 @@ func Connect() {
 
 ## To run the updated docker app
 docker-compose up --build
+
+
+<!-- Please focus on the `server` directory and its contents located at `/home/abhaysahani/Projects/Todo-app-Using-Go-React/server`. -->
