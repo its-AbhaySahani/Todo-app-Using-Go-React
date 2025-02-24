@@ -43,3 +43,9 @@ docker-compose up --build
 
 
 <!-- Please focus on the `server` directory and its contents located at `/home/abhaysahani/Projects/Todo-app-Using-Go-React/server`. -->
+
+
+type UserServiceRepository interface {
+    CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateResponse, error)
+    GetUserByUsername(ctx context.Context, username string) (*dto.UserResponse, error)
+}
