@@ -180,7 +180,11 @@ func UndoTodo(todoService *todos.TodoService) http.HandlerFunc {
 
 func GetSharedTodos(sharedTodoService *shared_todos.SharedTodoService) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
-        userID := r.Context().Value("userID").(string)
+        userID, ok := r.Context().Value("userID").(string)
+        if !ok {
+            http.Error(w, "Unauthorized", http.StatusUnauthorized)
+            return
+        }
         res, err := sharedTodoService.GetSharedTodos(context.Background(), userID)
         if err != nil {
             http.Error(w, err.Error(), http.StatusInternalServerError)

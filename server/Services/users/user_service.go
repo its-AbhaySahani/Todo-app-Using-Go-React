@@ -14,6 +14,14 @@ type UserService struct {
 
 func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.CreateResponse, error) {
     const functionName = "services.users.UserService.CreateUser"
+
+    // Hash the password before storing it
+    hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+    if err != nil {
+        return nil, fmt.Errorf("%s: failed to hash password: %w", functionName, err)
+    }
+    req.Password = string(hashedPassword)
+
     res, err := s.repo.CreateUser(ctx, req)
     if err != nil {
         return nil, fmt.Errorf("%s: failed to create user: %w", functionName, err)
