@@ -141,4 +141,4 @@ func TestAuthMiddlewareWithNoToken(t *testing.T) {
     }
     
     fmt.Println("Auth middleware with no token test passed")
-}
+} 
