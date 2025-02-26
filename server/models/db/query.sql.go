@@ -13,7 +13,11 @@ import (
 const addTeamMember = `-- name: AddTeamMember :exec
 
 INSERT INTO team_members (team_id, user_id, is_admin)
-VALUES (?, ?, ?)
+VALUES (
+  ? /* sqlc.arg(teamID) */,
+  ? /* sqlc.arg(userID) */,
+  ? /* sqlc.arg(isAdmin) */
+)
 `
 
 type AddTeamMemberParams struct {
@@ -31,7 +35,17 @@ func (q *Queries) AddTeamMember(ctx context.Context, arg AddTeamMemberParams) er
 const createSharedTodo = `-- name: CreateSharedTodo :exec
 
 INSERT INTO shared_todos (id, task, description, done, important, user_id, date, time, shared_by)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (
+  ? /* sqlc.arg(id) */,
+  ? /* sqlc.arg(task) */,
+  ? /* sqlc.arg(description) */,
+  ? /* sqlc.arg(done) */,
+  ? /* sqlc.arg(important) */,
+  ? /* sqlc.arg(userID) */,
+  ? /* sqlc.arg(date) */,
+  ? /* sqlc.arg(time) */,
+  ? /* sqlc.arg(sharedBy) */
+)
 `
 
 type CreateSharedTodoParams struct {
@@ -65,7 +79,12 @@ func (q *Queries) CreateSharedTodo(ctx context.Context, arg CreateSharedTodoPara
 const createTeam = `-- name: CreateTeam :exec
 
 INSERT INTO teams (id, name, password, admin_id)
-VALUES (?, ?, ?, ?)
+VALUES (
+  ? /* sqlc.arg(id) */,
+  ? /* sqlc.arg(name) */,
+  ? /* sqlc.arg(password) */,
+  ? /* sqlc.arg(adminID) */
+)
 `
 
 type CreateTeamParams struct {
@@ -89,7 +108,17 @@ func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) error {
 const createTeamTodo = `-- name: CreateTeamTodo :exec
 
 INSERT INTO team_todos (id, task, description, done, important, team_id, assigned_to, date, time)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (
+  ? /* sqlc.arg(id) */,
+  ? /* sqlc.arg(task) */,
+  ? /* sqlc.arg(description) */,
+  ? /* sqlc.arg(done) */,
+  ? /* sqlc.arg(important) */,
+  ? /* sqlc.arg(teamID) */,
+  ? /* sqlc.arg(assignedTo) */,
+  ? /* sqlc.arg(date) */,
+  ? /* sqlc.arg(time) */
+)
 `
 
 type CreateTeamTodoParams struct {
@@ -123,7 +152,16 @@ func (q *Queries) CreateTeamTodo(ctx context.Context, arg CreateTeamTodoParams) 
 const createTodo = `-- name: CreateTodo :exec
 
 INSERT INTO todos (id, task, description, done, important, user_id, date, time)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+VALUES (
+  ? /* sqlc.arg(id) */,
+  ? /* sqlc.arg(task) */,
+  ? /* sqlc.arg(description) */,
+  ? /* sqlc.arg(done) */,
+  ? /* sqlc.arg(important) */,
+  ? /* sqlc.arg(userID) */,
+  ? /* sqlc.arg(date) */,
+  ? /* sqlc.arg(time) */
+)
 `
 
 type CreateTodoParams struct {
@@ -155,7 +193,11 @@ func (q *Queries) CreateTodo(ctx context.Context, arg CreateTodoParams) error {
 const createUser = `-- name: CreateUser :exec
 
 INSERT INTO users (id, username, password)
-VALUES (?, ?, ?)
+VALUES (
+  ? /* sqlc.arg(id) */,
+  ? /* sqlc.arg(username) */,
+  ? /* sqlc.arg(password) */
+)
 `
 
 type CreateUserParams struct {
@@ -172,7 +214,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 
 const deleteTeamTodo = `-- name: DeleteTeamTodo :exec
 DELETE FROM team_todos
-WHERE id = ? AND team_id = ?
+WHERE id = ? /* sqlc.arg(id) */ AND team_id = ? /* sqlc.arg(teamID) */
 `
 
 type DeleteTeamTodoParams struct {
@@ -187,7 +229,7 @@ func (q *Queries) DeleteTeamTodo(ctx context.Context, arg DeleteTeamTodoParams) 
 
 const deleteTodo = `-- name: DeleteTodo :exec
 DELETE FROM todos
-WHERE id = ? AND user_id = ?
+WHERE id = ? /* sqlc.arg(id) */ AND user_id = ? /* sqlc.arg(userID) */
 `
 
 type DeleteTodoParams struct {
@@ -203,7 +245,7 @@ func (q *Queries) DeleteTodo(ctx context.Context, arg DeleteTodoParams) error {
 const getSharedByMeTodos = `-- name: GetSharedByMeTodos :many
 SELECT id, task, description, done, important, user_id, date, time, shared_by
 FROM shared_todos
-WHERE shared_by = ?
+WHERE shared_by = ? /* sqlc.arg(sharedBy) */
 `
 
 func (q *Queries) GetSharedByMeTodos(ctx context.Context, sharedBy sql.NullString) ([]SharedTodo, error) {
@@ -242,7 +284,7 @@ func (q *Queries) GetSharedByMeTodos(ctx context.Context, sharedBy sql.NullStrin
 const getSharedTodos = `-- name: GetSharedTodos :many
 SELECT id, task, description, done, important, user_id, date, time, shared_by
 FROM shared_todos
-WHERE user_id = ?
+WHERE user_id = ? /* sqlc.arg(userID) */
 `
 
 func (q *Queries) GetSharedTodos(ctx context.Context, userID sql.NullString) ([]SharedTodo, error) {
@@ -281,7 +323,7 @@ func (q *Queries) GetSharedTodos(ctx context.Context, userID sql.NullString) ([]
 const getTeamByID = `-- name: GetTeamByID :one
 SELECT id, name, password, admin_id
 FROM teams
-WHERE id = ?
+WHERE id = ? /* sqlc.arg(teamID) */
 `
 
 func (q *Queries) GetTeamByID(ctx context.Context, id string) (Team, error) {
@@ -299,7 +341,7 @@ func (q *Queries) GetTeamByID(ctx context.Context, id string) (Team, error) {
 const getTeamMembers = `-- name: GetTeamMembers :many
 SELECT team_id, user_id, is_admin
 FROM team_members
-WHERE team_id = ?
+WHERE team_id = ? /* sqlc.arg(teamID) */
 `
 
 func (q *Queries) GetTeamMembers(ctx context.Context, teamID string) ([]TeamMember, error) {
@@ -328,7 +370,7 @@ func (q *Queries) GetTeamMembers(ctx context.Context, teamID string) ([]TeamMemb
 const getTeamTodos = `-- name: GetTeamTodos :many
 SELECT id, task, description, done, important, team_id, assigned_to, date, time
 FROM team_todos
-WHERE team_id = ?
+WHERE team_id = ? /* sqlc.arg(teamID) */
 `
 
 func (q *Queries) GetTeamTodos(ctx context.Context, teamID string) ([]TeamTodo, error) {
@@ -367,7 +409,7 @@ func (q *Queries) GetTeamTodos(ctx context.Context, teamID string) ([]TeamTodo, 
 const getTeamsByAdminID = `-- name: GetTeamsByAdminID :many
 SELECT id, name, password, admin_id
 FROM teams
-WHERE admin_id = ?
+WHERE admin_id = ? /* sqlc.arg(adminID) */
 `
 
 func (q *Queries) GetTeamsByAdminID(ctx context.Context, adminID string) ([]Team, error) {
@@ -401,7 +443,7 @@ func (q *Queries) GetTeamsByAdminID(ctx context.Context, adminID string) ([]Team
 const getTodosByUserID = `-- name: GetTodosByUserID :many
 SELECT id, task, description, done, important, user_id, date, time
 FROM todos
-WHERE user_id = ?
+WHERE user_id = ? /* sqlc.arg(userID) */
 `
 
 func (q *Queries) GetTodosByUserID(ctx context.Context, userID sql.NullString) ([]Todo, error) {
@@ -439,7 +481,7 @@ func (q *Queries) GetTodosByUserID(ctx context.Context, userID sql.NullString) (
 const getUserByUsername = `-- name: GetUserByUsername :one
 SELECT id, username, password
 FROM users
-WHERE username = ?
+WHERE username = ? /* sqlc.arg(username) */
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
@@ -451,9 +493,12 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 
 const joinTeam = `-- name: JoinTeam :exec
 INSERT INTO team_members (team_id, user_id, is_admin)
-SELECT id, ?, false
+SELECT 
+  id, 
+  ? /* sqlc.arg(userID) */, 
+  false
 FROM teams
-WHERE name = ? AND password = ?
+WHERE name = ? /* sqlc.arg(teamName) */ AND password = ? /* sqlc.arg(teamPassword) */
 `
 
 type JoinTeamParams struct {
@@ -469,7 +514,7 @@ func (q *Queries) JoinTeam(ctx context.Context, arg JoinTeamParams) error {
 
 const removeTeamMember = `-- name: RemoveTeamMember :exec
 DELETE FROM team_members
-WHERE team_id = ? AND user_id = ?
+WHERE team_id = ? /* sqlc.arg(teamID) */ AND user_id = ? /* sqlc.arg(userID) */
 `
 
 type RemoveTeamMemberParams struct {
@@ -484,9 +529,18 @@ func (q *Queries) RemoveTeamMember(ctx context.Context, arg RemoveTeamMemberPara
 
 const shareTodoWithUser = `-- name: ShareTodoWithUser :exec
 INSERT INTO shared_todos (id, task, description, done, important, user_id, date, time, shared_by)
-SELECT ?, task, description, done, important, (SELECT id FROM users WHERE username = ?), date, time, ?
+SELECT 
+  ? /* sqlc.arg(newID) */,
+  task, 
+  description, 
+  done, 
+  important, 
+  (SELECT id FROM users WHERE username = ? /* sqlc.arg(receiverUsername) */), 
+  date, 
+  time, 
+  ? /* sqlc.arg(senderID) */
 FROM todos
-WHERE todos.id = ?
+WHERE todos.id = ? /* sqlc.arg(todoID) */
 `
 
 type ShareTodoWithUserParams struct {
@@ -509,7 +563,7 @@ func (q *Queries) ShareTodoWithUser(ctx context.Context, arg ShareTodoWithUserPa
 const undoTodo = `-- name: UndoTodo :exec
 UPDATE todos
 SET done = false
-WHERE id = ? AND user_id = ?
+WHERE id = ? /* sqlc.arg(id) */ AND user_id = ? /* sqlc.arg(userID) */
 `
 
 type UndoTodoParams struct {
@@ -524,8 +578,13 @@ func (q *Queries) UndoTodo(ctx context.Context, arg UndoTodoParams) error {
 
 const updateTeamTodo = `-- name: UpdateTeamTodo :exec
 UPDATE team_todos
-SET task = ?, description = ?, done = ?, important = ?, assigned_to = ?
-WHERE id = ? AND team_id = ?
+SET 
+  task = ? /* sqlc.arg(task) */,
+  description = ? /* sqlc.arg(description) */,
+  done = ? /* sqlc.arg(done) */,
+  important = ? /* sqlc.arg(important) */,
+  assigned_to = ? /* sqlc.arg(assignedTo) */
+WHERE id = ? /* sqlc.arg(id) */ AND team_id = ? /* sqlc.arg(teamID) */
 `
 
 type UpdateTeamTodoParams struct {
@@ -553,8 +612,11 @@ func (q *Queries) UpdateTeamTodo(ctx context.Context, arg UpdateTeamTodoParams) 
 
 const updateTodo = `-- name: UpdateTodo :exec
 UPDATE todos
-SET task = ?, description = ?, done = ?, important = ?
-WHERE id = ? AND user_id = ?
+SET task = ? /* sqlc.arg(task) */,
+    description = ? /* sqlc.arg(description) */,
+    done = ? /* sqlc.arg(done) */,
+    important = ? /* sqlc.arg(important) */
+WHERE id = ? /* sqlc.arg(id) */ AND user_id = ? /* sqlc.arg(userID) */
 `
 
 type UpdateTodoParams struct {

@@ -7,6 +7,10 @@ import (
     "github.com/gorilla/mux"
 )
 
+type contextKey string
+
+const UserIDKey contextKey = "userID"
+
 // Get all todos
 func GetTodos(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")

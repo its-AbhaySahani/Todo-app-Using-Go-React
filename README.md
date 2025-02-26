@@ -1,45 +1,121 @@
 # Todo-app-Using-Go-React
+<!-- -- Users Queries
 
-<!-- package database
+-- name: CreateUser :exec
+INSERT INTO users (id, username, password)
+VALUES (?, ?, ?);
 
-import (
-    "database/sql"
-    "fmt"
-    "time"
-    _ "github.com/go-sql-driver/mysql"
-)
+-- name: GetUserByUsername :one
+SELECT id, username, password
+FROM users
+WHERE username = ?;
 
-var DB *sql.DB
+-- Todos Queries
 
-func Connect() {
-    dsn := "Abhay:Abhay@123@tcp(mysql:3306)/Todo_app"
-    var db *sql.DB
-    var err error
+-- name: CreateTodo :exec
+INSERT INTO todos (id, task, description, done, important, user_id, date, time)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
-    for i := 0; i < 10; i++ {
-        db, err = sql.Open("mysql", dsn)
-        if err == nil {
-            err = db.Ping()
-            if err == nil {
-                break
-            }
-        }
-        fmt.Println("Error connecting to the database. Retrying in 5 seconds...")
-        time.Sleep(5 * time.Second)
-    }
+-- name: GetTodosByUserID :many
+SELECT id, task, description, done, important, user_id, date, time
+FROM todos
+WHERE user_id = ?;
 
-    if err != nil {
-        fmt.Println("Error connecting to the database:", err)
-        return
-    }
+-- name: UpdateTodo :exec
+UPDATE todos
+SET task = ?, description = ?, done = ?, important = ?
+WHERE id = ? AND user_id = ?;
 
-    DB = db
-    fmt.Println("Connected to the database successfully")
-} -->
+-- name: DeleteTodo :exec
+DELETE FROM todos
+WHERE id = ? AND user_id = ?;
+
+-- name: UndoTodo :exec
+UPDATE todos
+SET done = false
+WHERE id = ? AND user_id = ?;
+
+-- Shared Todos Queries
+
+-- name: CreateSharedTodo :exec
+INSERT INTO shared_todos (id, task, description, done, important, user_id, date, time, shared_by)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- name: GetSharedTodos :many
+SELECT id, task, description, done, important, user_id, date, time, shared_by
+FROM shared_todos
+WHERE user_id = ?;
+
+-- name: GetSharedByMeTodos :many
+SELECT id, task, description, done, important, user_id, date, time, shared_by
+FROM shared_todos
+WHERE shared_by = ?;
+
+-- name: ShareTodoWithUser :exec
+INSERT INTO shared_todos (id, task, description, done, important, user_id, date, time, shared_by)
+SELECT ?, task, description, done, important, (SELECT id FROM users WHERE username = ?), date, time, ?
+FROM todos
+WHERE todos.id = ?;
+
+-- Teams Queries
+
+-- name: CreateTeam :exec
+INSERT INTO teams (id, name, password, admin_id)
+VALUES (?, ?, ?, ?);
+
+-- name: GetTeamsByAdminID :many
+SELECT id, name, password, admin_id
+FROM teams
+WHERE admin_id = ?;
+
+-- name: GetTeamByID :one
+SELECT id, name, password, admin_id
+FROM teams
+WHERE id = ?;
+
+-- Team Members Queries
+
+-- name: AddTeamMember :exec
+INSERT INTO team_members (team_id, user_id, is_admin)
+VALUES (?, ?, ?);
+
+-- name: GetTeamMembers :many
+SELECT team_id, user_id, is_admin
+FROM team_members
+WHERE team_id = ?;
+
+-- name: RemoveTeamMember :exec
+DELETE FROM team_members
+WHERE team_id = ? AND user_id = ?;
+
+-- Team Todos Queries
+
+-- name: CreateTeamTodo :exec
+INSERT INTO team_todos (id, task, description, done, important, team_id, assigned_to, date, time)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- name: GetTeamTodos :many
+SELECT id, task, description, done, important, team_id, assigned_to, date, time
+FROM team_todos
+WHERE team_id = ?;
+
+-- name: UpdateTeamTodo :exec
+UPDATE team_todos
+SET task = ?, description = ?, done = ?, important = ?, assigned_to = ?
+WHERE id = ? AND team_id = ?;
+
+-- name: DeleteTeamTodo :exec
+DELETE FROM team_todos
+WHERE id = ? AND team_id = ?;
+
+-- name: JoinTeam :exec
+INSERT INTO team_members (team_id, user_id, is_admin)
+SELECT id, ?, false
+FROM teams
+WHERE name = ? AND password = ?; -->
 
 
 ## To run the updated docker app
 docker-compose up --build
 
 
-<!-- Please focus on the `server` directory and its contents located at `/home/abhaysahani/Projects/Todo-app-Using-Go-React/server`. -->
