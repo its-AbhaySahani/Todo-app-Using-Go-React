@@ -21,7 +21,7 @@ type SharedTodoRepository struct {
 
 func (r *SharedTodoRepository) CreateSharedTodo(ctx context.Context, req *dto.CreateSharedTodoRequest) (*dto.CreateResponse, error) {
     params := req.ConvertCreateSharedTodoDomainRequestToPersistentRequest()
-    err := r.querier.CreateSharedTodo(ctx, *params)
+    err := r.querier.CreateSharedTodo(ctx, *params)      // Using sqlc.arg
     if err != nil {
         return nil, err
     }
@@ -43,3 +43,17 @@ func (r *SharedTodoRepository) GetSharedByMeTodos(ctx context.Context, sharedBy 
     }
     return dto.NewSharedTodosResponse(todos), nil
 }
+
+// func (r *SharedTodoRepository) ShareTodoWithUser(ctx context.Context, req *dto.ShareTodoRequest) (*dto.SuccessResponse, error) {
+//     newID := uuid.New().String()
+//     err := r.querier.ShareTodoWithUser(ctx, db.ShareTodoWithUserParams{
+//         NewID:            newID,
+//         ReceiverUsername: req.Username,
+//         SenderID:         sql.NullString{String: req.SenderID, Valid: true},
+//         TodoID:           req.TaskID,
+//     })
+//     if err != nil {
+//         return nil, err
+//     }
+//     return &dto.SuccessResponse{Success: true}, nil
+// }
