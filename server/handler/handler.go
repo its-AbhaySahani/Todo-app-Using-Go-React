@@ -4,18 +4,19 @@ import (
     "database/sql"
     "github.com/gorilla/mux"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/handler/api"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/handler/middleware"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/users_repository"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/todos_repository"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/teams_repository"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/team_members_repository"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/team_todos_repository"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/shared_todos_repository"
-    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/Services/users"
-    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/Services/todos"
-    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/Services/teams"
-    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/Services/team_members"
-    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/Services/team_todos"
-    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/Services/shared_todos"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/services/users"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/services/todos"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/services/teams"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/services/team_members"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/services/team_todos"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/services/shared_todos"
 )
 
 func SetupRoutes(router *mux.Router, DB *sql.DB) {
@@ -35,29 +36,89 @@ func SetupRoutes(router *mux.Router, DB *sql.DB) {
     teamTodoService := team_todos.NewTeamTodoService(teamTodoRepo)
     sharedTodoService := shared_todos.NewSharedTodoService(sharedTodoRepo)
 
-    // User routes
+    // Setup API v1 routes
+    setupV1Routes(router, userService, todoService, teamService, teamMemberService, teamTodoService, sharedTodoService)
+    
+    // For backward compatibility, maintain the existing API routes
+    // This helps existing clients to continue working while new clients can use v1 API
+    setupLegacyRoutes(router, userService, todoService, teamService, teamMemberService, teamTodoService, sharedTodoService)
+}
+
+// setupV1Routes configures the versioned API endpoints
+func setupV1Routes(
+    router *mux.Router,
+    userService *users.UserService,
+    todoService *todos.TodoService,
+    teamService *teams.TeamService,
+    teamMemberService *team_members.TeamMemberService,
+    teamTodoService *team_todos.TeamTodoService,
+    sharedTodoService *shared_todos.SharedTodoService,
+) {
+    // API v1
+    v1 := router.PathPrefix("/api/v1").Subrouter()
+    
+    // Public routes
+    v1.HandleFunc("/register", api.Register(userService)).Methods("POST")
+    v1.HandleFunc("/login", api.Login(userService)).Methods("POST")
+    
+    // Protected routes
+    v1Protected := v1.PathPrefix("").Subrouter()
+    v1Protected.Use(middleware.AuthMiddleware)
+    
+    // Todo routes
+    v1Protected.HandleFunc("/todos", api.GetTodos(todoService)).Methods("GET")
+    v1Protected.HandleFunc("/todo", api.CreateTodo(todoService)).Methods("POST")
+    v1Protected.HandleFunc("/todo/{id}", api.UpdateTodo(todoService)).Methods("PUT")
+    v1Protected.HandleFunc("/todo/{id}", api.DeleteTodo(todoService)).Methods("DELETE")
+    v1Protected.HandleFunc("/todo/undo/{id}", api.UndoTodo(todoService)).Methods("PUT")
+    v1Protected.HandleFunc("/shared", api.GetSharedTodos(sharedTodoService)).Methods("GET")
+    
+    // Team routes
+    v1Protected.HandleFunc("/team", api.CreateTeam(teamService)).Methods("POST")
+    v1Protected.HandleFunc("/teams", api.GetTeams(teamService)).Methods("GET")
+    v1Protected.HandleFunc("/team/{teamId}/todos", api.GetTeamTodos(teamTodoService)).Methods("GET")
+    v1Protected.HandleFunc("/team/{teamId}/todo", api.CreateTeamTodo(teamTodoService)).Methods("POST")
+    v1Protected.HandleFunc("/team/{teamId}/todo/{id}", api.UpdateTeamTodo(teamTodoService)).Methods("PUT")
+    v1Protected.HandleFunc("/team/{teamId}/todo/{id}", api.DeleteTeamTodo(teamTodoService)).Methods("DELETE")
+    v1Protected.HandleFunc("/team/{teamId}/members", api.GetTeamMembers(teamMemberService)).Methods("GET")
+    v1Protected.HandleFunc("/team/{teamId}/member", api.AddTeamMember(teamMemberService)).Methods("POST")
+    v1Protected.HandleFunc("/team/{teamId}/member/{userId}", api.RemoveTeamMember(teamMemberService)).Methods("DELETE")
+}
+
+// setupLegacyRoutes maintains the original API endpoints for backward compatibility
+func setupLegacyRoutes(
+    router *mux.Router,
+    userService *users.UserService,
+    todoService *todos.TodoService,
+    teamService *teams.TeamService,
+    teamMemberService *team_members.TeamMemberService,
+    teamTodoService *team_todos.TeamTodoService,
+    sharedTodoService *shared_todos.SharedTodoService,
+) {
+    // Public routes
     router.HandleFunc("/api/register", api.Register(userService)).Methods("POST")
     router.HandleFunc("/api/login", api.Login(userService)).Methods("POST")
-
+    
+    // Protected routes
+    apiRouter := router.PathPrefix("/api").Subrouter()
+    apiRouter.Use(middleware.AuthMiddleware)
+    
     // Todo routes
-    router.HandleFunc("/api/todos", api.GetTodos(todoService)).Methods("GET")
-    router.HandleFunc("/api/todo", api.CreateTodo(todoService)).Methods("POST")
-    router.HandleFunc("/api/todo/{id}", api.UpdateTodo(todoService)).Methods("PUT")
-    router.HandleFunc("/api/todo/{id}", api.DeleteTodo(todoService)).Methods("DELETE")
-    router.HandleFunc("/api/todo/undo/{id}", api.UndoTodo(todoService)).Methods("PUT")
-    // router.HandleFunc("/api/share", api.ShareTodo(todoService)).Methods("POST")
-    router.HandleFunc("/api/shared", api.GetSharedTodos(sharedTodoService)).Methods("GET")
-
+    apiRouter.HandleFunc("/todos", api.GetTodos(todoService)).Methods("GET")
+    apiRouter.HandleFunc("/todo", api.CreateTodo(todoService)).Methods("POST")
+    apiRouter.HandleFunc("/todo/{id}", api.UpdateTodo(todoService)).Methods("PUT")
+    apiRouter.HandleFunc("/todo/{id}", api.DeleteTodo(todoService)).Methods("DELETE")
+    apiRouter.HandleFunc("/todo/undo/{id}", api.UndoTodo(todoService)).Methods("PUT")
+    apiRouter.HandleFunc("/shared", api.GetSharedTodos(sharedTodoService)).Methods("GET")
+    
     // Team routes
-    router.HandleFunc("/api/team", api.CreateTeam(teamService)).Methods("POST")
-    // router.HandleFunc("/api/team/join", api.JoinTeam(teamService)).Methods("POST")
-    router.HandleFunc("/api/teams", api.GetTeams(teamService)).Methods("GET")
-    // router.HandleFunc("/api/team/{teamId}", api.GetTeamDetails(teamService)).Methods("GET")
-    router.HandleFunc("/api/team/{teamId}/todos", api.GetTeamTodos(teamTodoService)).Methods("GET")
-    router.HandleFunc("/api/team/{teamId}/todo", api.CreateTeamTodo(teamTodoService)).Methods("POST")
-    router.HandleFunc("/api/team/{teamId}/todo/{id}", api.UpdateTeamTodo(teamTodoService)).Methods("PUT")
-    router.HandleFunc("/api/team/{teamId}/todo/{id}", api.DeleteTeamTodo(teamTodoService)).Methods("DELETE")
-    router.HandleFunc("/api/team/{teamId}/members", api.GetTeamMembers(teamMemberService)).Methods("GET")
-    router.HandleFunc("/api/team/{teamId}/member", api.AddTeamMember(teamMemberService)).Methods("POST")
-    router.HandleFunc("/api/team/{teamId}/member/{userId}", api.RemoveTeamMember(teamMemberService)).Methods("DELETE")
+    apiRouter.HandleFunc("/team", api.CreateTeam(teamService)).Methods("POST")
+    apiRouter.HandleFunc("/teams", api.GetTeams(teamService)).Methods("GET")
+    apiRouter.HandleFunc("/team/{teamId}/todos", api.GetTeamTodos(teamTodoService)).Methods("GET")
+    apiRouter.HandleFunc("/team/{teamId}/todo", api.CreateTeamTodo(teamTodoService)).Methods("POST")
+    apiRouter.HandleFunc("/team/{teamId}/todo/{id}", api.UpdateTeamTodo(teamTodoService)).Methods("PUT")
+    apiRouter.HandleFunc("/team/{teamId}/todo/{id}", api.DeleteTeamTodo(teamTodoService)).Methods("DELETE")
+    apiRouter.HandleFunc("/team/{teamId}/members", api.GetTeamMembers(teamMemberService)).Methods("GET")
+    apiRouter.HandleFunc("/team/{teamId}/member", api.AddTeamMember(teamMemberService)).Methods("POST")
+    apiRouter.HandleFunc("/team/{teamId}/member/{userId}", api.RemoveTeamMember(teamMemberService)).Methods("DELETE")
 }
