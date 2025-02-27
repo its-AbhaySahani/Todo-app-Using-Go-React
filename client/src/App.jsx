@@ -15,6 +15,7 @@ import TeamDetailsBox from "./Components/TeamDetailsBox";
 import TeamPage from "./Pages/TeamPage";
 import PeoplePage from "./Pages/PeoplePage"; // Import PeoplePage
 import AddMemberPage from "./Pages/AddMemberPage"; // Import AddMemberPage
+import MyRoutines from "./Pages/MyRoutines";
 
 function App() {
   const [filter, setFilter] = useState('all');
@@ -67,6 +68,7 @@ function AppContent({ filter, setFilter, isAuthenticated, setIsAuthenticated }) 
               <Route path="/team/:teamId" element={<TeamPage filter={filter} />} />
               <Route path="/team/:teamId/people" element={<PeoplePage />} />
               <Route path="/team/:teamId/add-member" element={<AddMemberPage />} /> {/* Add AddMemberPage route */}
+              <Route path="/my-routines" element={<MyRoutines />} />
             </Routes>
           </Container>
         </div>

@@ -5,6 +5,8 @@ import (
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/Database"
     "golang.org/x/crypto/bcrypt"
     "time"
+    "strings"
+    "fmt"
 )
 
 type Todo struct {
@@ -59,6 +61,18 @@ type TeamMemberDetails struct {
     ID       string `json:"id"`
     Username string `json:"username"`
     IsAdmin  bool   `json:"is_admin"`
+}
+
+// Add this struct to your models.go file
+type Routine struct {
+    ID           string `json:"id"`
+    Day          string `json:"day"`
+    ScheduleType string `json:"scheduleType"` 
+    TaskID       string `json:"taskId"`
+    UserID       string `json:"userId"`
+    CreatedAt    string `json:"createdAt"`
+    UpdatedAt    string `json:"updatedAt"`
+    IsActive     bool   `json:"isActive"`
 }
 
 
@@ -311,3 +325,116 @@ func AddTeamMember(teamID, username, addedBy string) error {
     return err
 }
 
+
+// Add this struct to your models.go file
+
+// CreateRoutine creates a new routine entry for a task
+func CreateRoutine(day, scheduleType, taskID, userID string) (Routine, error) {
+    id := uuid.New().String()
+    currentDate := time.Now().Format("2006-01-02")
+    
+    _, err := database.DB.Exec(
+        "INSERT INTO routines (id, day, scheduleType, taskId, userId, createdAt, updatedAt, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        id, day, scheduleType, taskID, userID, currentDate, currentDate, true)
+    
+    if err != nil {
+        return Routine{}, err
+    }
+    
+    return Routine{
+        ID: id, 
+        Day: day, 
+        ScheduleType: scheduleType, 
+        TaskID: taskID, 
+        UserID: userID, 
+        CreatedAt: currentDate, 
+        UpdatedAt: currentDate, 
+        IsActive: true,
+    }, nil
+}
+
+// UpdateRoutineStatus updates the isActive status of a routine
+func UpdateRoutineStatus(id string, isActive bool) error {
+    currentDate := time.Now().Format("2006-01-02")
+    _, err := database.DB.Exec(
+        "UPDATE routines SET isActive = ?, updatedAt = ? WHERE id = ?", 
+        isActive, currentDate, id)
+    return err
+}
+
+// GetRoutinesByTaskID gets all routines for a specific task
+func GetRoutinesByTaskID(taskID string) ([]Routine, error) {
+    rows, err := database.DB.Query(
+        "SELECT id, day, scheduleType, taskId, userId, createdAt, updatedAt, isActive FROM routines "+
+        "WHERE taskId = ?", taskID)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var routines []Routine
+    for rows.Next() {
+        var routine Routine
+        if err := rows.Scan(&routine.ID, &routine.Day, &routine.ScheduleType, &routine.TaskID, &routine.UserID, 
+                           &routine.CreatedAt, &routine.UpdatedAt, &routine.IsActive); err != nil {
+            return nil, err
+        }
+        routines = append(routines, routine)
+    }
+    return routines, nil
+}
+
+// GetDailyRoutines gets all routines for a specific day and schedule type
+func GetDailyRoutines(day, scheduleType, userID string) ([]Todo, error) {
+    fmt.Printf("GetDailyRoutines called with day=%s, scheduleType=%s, userID=%s\n", 
+        day, scheduleType, userID)
+
+    // Your existing query should be correct, but let's double-check
+    rows, err := database.DB.Query(`
+        SELECT t.id, t.task, t.description, t.done, t.important, t.user_id, t.date, t.time 
+        FROM todos t
+        JOIN routines r ON t.id = r.taskId
+        WHERE r.day = ? AND r.scheduleType = ? AND r.userId = ? AND r.isActive = true`,
+        day, scheduleType, userID)
+    
+    if err != nil {
+        fmt.Printf("Error in DB query: %v\n", err)
+        return nil, err
+    }
+    defer rows.Close()
+
+    var todos []Todo
+    for rows.Next() {
+        var todo Todo
+        if err := rows.Scan(&todo.ID, &todo.Task, &todo.Description, &todo.Done, &todo.Important, 
+                           &todo.UserID, &todo.Date, &todo.Time); err != nil {
+            return nil, err
+        }
+        todos = append(todos, todo)
+    }
+    
+    fmt.Printf("Returning %d todos\n", len(todos))
+    return todos, nil
+}
+// DeleteRoutinesByTaskID deletes all routines for a task when a task is deleted
+func DeleteRoutinesByTaskID(taskID string) error {
+    _, err := database.DB.Exec("DELETE FROM routines WHERE taskId = ?", taskID)
+    return err
+}
+
+// GetTodayRoutines gets routines for today by schedule type
+func GetTodayRoutines(scheduleType, userID string) ([]Todo, error) {
+    // Get today's day name (sunday, monday, etc.)
+    dayName := strings.ToLower(time.Now().Weekday().String())
+    
+    return GetDailyRoutines(dayName, scheduleType, userID)
+}
+
+// UpdateRoutineDay updates the day of a routine
+func UpdateRoutineDay(id string, day string) error {
+    currentDate := time.Now().Format("2006-01-02")
+    _, err := database.DB.Exec(
+        "UPDATE routines SET day = ?, updatedAt = ? WHERE id = ?", 
+        day, currentDate, id)
+    return err
+}

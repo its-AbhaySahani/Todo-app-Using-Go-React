@@ -1,13 +1,11 @@
 import React, { Component } from "react";
 import axios from "axios";
-import { Card, Header, Form, Input, Button, Modal, Checkbox, Icon } from "semantic-ui-react"; // Import Icon here
-import { LocalizationProvider } from "@mui/lab";
-import AdapterDateFns from "@mui/lab/AdapterDateFns";
-import DateTimePicker from "@mui/lab/DateTimePicker";
-import TextField from "@mui/material/TextField";
+import { Card, Modal, Icon } from "semantic-ui-react";
 import moment from "moment";
 import Box from "./Box";
+import TodoForm from "./Components/TodoForm";
 import "./Box.css";
+import "./To-do-lists.css";
 
 let endpoint = "http://localhost:9000";
 
@@ -16,13 +14,17 @@ class ToDoList extends Component {
     super(props);
 
     this.state = {
+      items: [],
+      editTaskId: null,
+      modalOpen: false,
       task: "",
       description: "",
       important: false,
       dateTime: new Date(),
-      items: [],
-      editTaskId: null,
-      modalOpen: false,
+      morning: false,
+      noon: false,
+      evening: false,
+      night: false
     };
   }
 
@@ -35,72 +37,6 @@ class ToDoList extends Component {
       this.getTasks();
     }
   }
-
-  onChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
-  };
-
-  onCheckboxChange = (e, { checked }) => {
-    this.setState({ important: checked });
-  };
-
-  onDateTimeChange = (dateTime) => {
-    this.setState({ dateTime });
-  };
-
-  onSubmit = (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token");
-    const formattedDate = moment.utc(this.state.dateTime).format("YYYY-MM-DD");
-    const formattedTime = moment.utc(this.state.dateTime).format("HH:mm:ss");
-    if (this.state.task) {
-      if (this.state.editTaskId) {
-        axios
-          .put(
-            `${endpoint}/api/todo/${this.state.editTaskId}`,
-            {
-              task: this.state.task,
-              description: this.state.description,
-              important: this.state.important,
-              done: false,
-              date: formattedDate,
-              time: formattedTime,
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          )
-          .then(() => {
-            this.getTasks();
-            this.setState({ task: "", description: "", important: false, editTaskId: null, dateTime: new Date(), modalOpen: false });
-          });
-      } else {
-        axios
-          .post(
-            `${endpoint}/api/todo`,
-            {
-              task: this.state.task,
-              description: this.state.description,
-              important: this.state.important,
-              done: false,
-              date: formattedDate,
-              time: formattedTime,
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          )
-          .then(() => {
-            this.getTasks();
-            this.setState({ task: "", description: "", important: false, dateTime: new Date(), modalOpen: false });
-          });
-      }
-    }
-  };
 
   getTasks = () => {
     const token = localStorage.getItem("token");
@@ -185,25 +121,129 @@ class ToDoList extends Component {
       });
   };
 
-  editTask = (id, task, description, date, time, important) => {
-    this.setState({ task, description, important, editTaskId: id, dateTime: moment.utc(`${date} ${time}`).toDate(), modalOpen: true });
-  };
+
+editTask = (id, task, description, date, time, important) => {
+  // Get the current routine settings for this task when editing
+  const token = localStorage.getItem("token");
+  
+  axios.get(`${endpoint}/api/routine/task/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+  .then((res) => {
+    const routines = res.data || [];
+    const dayOfWeek = moment().format('dddd').toLowerCase();
+    
+    // Set the checkboxes based on active routines for today
+    let morning = false;
+    let noon = false;
+    let evening = false;
+    let night = false;
+    let selectedDay = dayOfWeek; // Default to current day
+    
+    // If there are active routines, get the day from the first one
+    if (routines.length > 0 && routines.some(r => r.isActive)) {
+      const activeRoutines = routines.filter(r => r.isActive);
+      if (activeRoutines.length > 0) {
+        selectedDay = activeRoutines[0].day;
+      }
+      
+      // Check which schedule types are active
+      routines.forEach(routine => {
+        if (routine.isActive && routine.day === selectedDay) {
+          switch(routine.scheduleType) {
+            case 'morning':
+              morning = true;
+              break;
+            case 'noon':
+              noon = true;
+              break;
+            case 'evening':
+              evening = true;
+              break;
+            case 'night':
+              night = true;
+              break;
+            default:
+              break;
+          }
+        }
+      });
+    }
+    
+    this.setState({ 
+      task, 
+      description, 
+      important, 
+      editTaskId: id, 
+      dateTime: moment.utc(`${date} ${time}`).toDate(),
+      morning,
+      noon,
+      evening,
+      night,
+      selectedDay,
+      modalOpen: true 
+    });
+  })
+  .catch(err => {
+    // If there's an error or no routines, just open the modal without setting routine checkboxes
+    this.setState({ 
+      task, 
+      description, 
+      important, 
+      editTaskId: id, 
+      dateTime: moment.utc(`${date} ${time}`).toDate(),
+      morning: false,
+      noon: false,
+      evening: false,
+      night: false,
+      selectedDay: moment().format('dddd').toLowerCase(), // Default to current day
+      modalOpen: true 
+    });
+  });
+};
 
   openModal = () => {
-    this.setState({ modalOpen: true });
+    this.setState({ 
+      modalOpen: true,
+      task: "",
+      description: "",
+      important: false,
+      morning: false,
+      noon: false,
+      evening: false,
+      night: false,
+      editTaskId: null,
+      dateTime: new Date()
+    });
   };
 
   closeModal = () => {
     this.setState({ modalOpen: false });
   };
 
+  handleFormSubmit = () => {
+    this.getTasks();
+    this.setState({ 
+      modalOpen: false,
+      task: "",
+      description: "",
+      important: false,
+      morning: false,
+      noon: false,
+      evening: false,
+      night: false,
+      editTaskId: null,
+      dateTime: new Date()
+    });
+  };
+
   render() {
     return (
-      <div>
+      <div className="todo-list-container">
         <div className="row">
-          {/* <Header className="header" as="h2" color="yellow">
-            To Do List
-          </Header> */}
+          {/* Header removed as in your original code */}
         </div>
         <div className="row">
           <Card.Group>
@@ -229,51 +269,18 @@ class ToDoList extends Component {
         <Modal open={this.state.modalOpen} onClose={this.closeModal}>
           <Modal.Header>{this.state.editTaskId ? "Update Task" : "Add Task"}</Modal.Header>
           <Modal.Content>
-            <Form onSubmit={this.onSubmit}>
-              <Form.Field>
-                <label>Task Name</label>
-                <Input
-                  type="text"
-                  name="task"
-                  onChange={this.onChange}
-                  value={this.state.task}
-                  fluid
-                  placeholder="Task Name"
-                />
-              </Form.Field>
-              <Form.Field>
-                <label>Description</label>
-                <Input
-                  type="text"
-                  name="description"
-                  onChange={this.onChange}
-                  value={this.state.description}
-                  fluid
-                  placeholder="Description"
-                />
-              </Form.Field>
-              <Form.Field>
-                <label>Mark as Important</label>
-                <Checkbox
-                  toggle
-                  checked={this.state.important}
-                  onChange={this.onCheckboxChange}
-                />
-              </Form.Field>
-              <Form.Field>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DateTimePicker
-                    label="Date & Time"
-                    value={this.state.dateTime}
-                    onChange={this.onDateTimeChange}
-                    renderInput={(params) => <TextField {...params} />}
-                  />
-                </LocalizationProvider>
-              </Form.Field>
-              <Button type="submit">
-                {this.state.editTaskId ? "Update Task" : "Add Task"}
-              </Button>
-            </Form>
+            <TodoForm
+              initialTask={this.state.task}
+              initialDescription={this.state.description}
+              initialImportant={this.state.important}
+              initialDateTime={this.state.dateTime}
+              editTaskId={this.state.editTaskId}
+              initialMorning={this.state.morning}
+              initialNoon={this.state.noon}
+              initialEvening={this.state.evening}
+              initialNight={this.state.night}
+              onFormSubmit={this.handleFormSubmit}
+            />
           </Modal.Content>
         </Modal>
       </div>

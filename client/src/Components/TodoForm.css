@@ -1,0 +1,156 @@
+/* client/src/Components/TodoForm.css */
+
+.todo-form {
+    color: var(--text-color);
+    background-color: transparent;
+  }
+  
+  .todo-form h4 {
+    color: var(--primary-color, #1e90ff);
+    font-size: 1.2rem;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color, #333333);
+    padding-bottom: 8px;
+  }
+  
+  /* Style form fields */
+  .todo-form .field {
+    margin-bottom: 20px;
+  }
+  
+  .todo-form .field label {
+    display: block;
+    color: var(--text-color, #ffffff);
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+  }
+  
+  /* Style input fields */
+  .todo-form input[type="text"] {
+    background-color: var(--input-bg-color, #2a2a2a) !important;
+    color: var(--text-color, #ffffff) !important;
+    border: 1px solid var(--input-border-color, #444444) !important;
+    border-radius: 6px !important;
+    padding: 12px !important;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+  
+  .todo-form input[type="text"]:focus {
+    border-color: var(--primary-color, #1e90ff) !important;
+    box-shadow: 0 0 0 1px var(--primary-color, #1e90ff) !important;
+  }
+  
+  /* Dropdown styling */
+  .todo-form .dropdown {
+    background-color: var(--input-bg-color, #2a2a2a) !important;
+    border: 1px solid var(--input-border-color, #444444) !important;
+    border-radius: 6px !important;
+    color: var(--text-color, #ffffff) !important;
+  }
+  
+  .todo-form .dropdown .text {
+    color: var(--text-color, #ffffff) !important;
+  }
+  
+  .todo-form .dropdown .menu {
+    background-color: var(--card-bg-color, #1e1e1e) !important;
+    border-color: var(--border-color, #333333) !important;
+  }
+  
+  .todo-form .dropdown .menu .item {
+    border-color: var(--border-color, #333333) !important;
+    color: var(--text-color, #ffffff) !important;
+  }
+  
+  .todo-form .dropdown .menu .item:hover {
+    background-color: var(--hover-bg-color, #1a1a1a) !important;
+  }
+  
+  .todo-form .dropdown .menu .item.selected {
+    background-color: var(--primary-color, #1e90ff) !important;
+  }
+  
+  /* Checkbox styling */
+  .routine-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 10px;
+  }
+  
+  .routine-checkbox {
+    background-color: rgba(92, 7, 84, 0.797);
+    border-radius: 8px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+  }
+  
+  .routine-checkbox:hover {
+    background-color: rgba(78, 78, 78, 0.4);
+  }
+  
+  .todo-form .checkbox label {
+    color: var(--text-color, #ffffff) !important;
+    margin-left: 5px;
+  }
+  
+  /* MUI DateTimePicker adjustments */
+  .todo-form .MuiFormControl-root {
+    width: 100%;
+  }
+  
+  .todo-form .MuiInputBase-root {
+    background-color: var(--input-bg-color, #2a2a2a) !important;
+    border-radius: 6px !important;
+  }
+  
+  .todo-form .MuiInputBase-input {
+    color: var(--text-color, #ffffff) !important;
+  }
+  
+  .todo-form .MuiOutlinedInput-notchedOutline {
+    border-color: var(--input-border-color, #444444) !important;
+  }
+  
+  .todo-form .MuiInputLabel-root {
+    color: var(--secondary-text-color, #b0b0b0) !important;
+  }
+  
+  .todo-form .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+    border-color: var(--primary-color, #1e90ff) !important;
+  }
+  
+  .todo-form .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: var(--primary-color, #1e90ff) !important;
+  }
+  
+  /* Submit button styling */
+  .todo-form .submit-button {
+    background-color: var(--primary-color, #1e90ff) !important;
+    color: white !important;
+    padding: 12px 20px !important;
+    border-radius: 8px !important;
+    font-weight: bold !important;
+    margin-top: 20px !important;
+    transition: background-color 0.3s ease !important;
+  }
+  
+  .todo-form .submit-button:hover {
+    background-color: var(--button-hover-bg-color, #1c86ee) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .routine-checkboxes {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .routine-checkbox {
+      width: 100%;
+    }
+  }

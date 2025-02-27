@@ -1,0 +1,38 @@
+/* To-do-lists.css */
+
+.todo-list-container {
+    padding: 20px;
+    padding-top: 100px; /* Add padding to the top to account for the header */
+    background-color: var(--background-color);
+    color: var(--text-color);
+    height: calc(100vh - 80px); /* Adjust height to account for the header */
+  }
+  
+  /* Style for the row containing the card group */
+  .todo-list-container .row {
+    margin-bottom: 20px;
+  }
+  
+  /* Card grid layout */
+  .todo-list-container .ui.cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: flex-start;
+  }
+  
+  /* Make sure modal is on top of everything */
+  .ui.modal {
+    z-index: 1500 !important;
+  }
+  
+  /* Media queries for responsiveness */
+  @media (max-width: 768px) {
+    .todo-list-container {
+      padding-top: 70px; /* Less padding on smaller screens */
+    }
+    
+    .todo-list-container .ui.cards {
+      justify-content: center;
+    }
+  }

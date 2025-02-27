@@ -1,7 +1,11 @@
+// client/src/Components/LeftBar.jsx
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './LeftBar.css';
 
 const LeftBar = ({ setFilter, isTeamPage }) => {
+  const navigate = useNavigate();
+  
   return (
     <div className="leftbar-container">
       <div className="leftbar-heading">CHECKMATE</div>
@@ -23,6 +27,9 @@ const LeftBar = ({ setFilter, isTeamPage }) => {
             <button onClick={() => setFilter('incomplete')}>Incomplete Team Tasks</button>
           </>
         )}
+      </div>
+      <div className="leftbar-bottom">
+        <button className="routine-button" onClick={() => navigate('/my-routines')}>My Routines</button>
       </div>
     </div>
   );

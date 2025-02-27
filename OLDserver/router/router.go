@@ -39,5 +39,11 @@ func Router() *mux.Router {
     apiRouter.HandleFunc("/team/{teamId}/member", middleware.AddTeamMember).Methods("POST")
     apiRouter.HandleFunc("/team/{teamId}/member/{userId}", middleware.RemoveTeamMember).Methods("DELETE")
 
+
+    // Routine routes
+    apiRouter.HandleFunc("/routine", middleware.CreateOrUpdateRoutines).Methods("POST")
+    apiRouter.HandleFunc("/routine/task/{taskId}", middleware.GetRoutinesByTask).Methods("GET")
+    apiRouter.HandleFunc("/routine/today/{scheduleType}", middleware.GetTodayRoutines).Methods("GET")
+    apiRouter.HandleFunc("/routine/day/{day}/{scheduleType}", middleware.GetRoutinesByDayAndSchedule).Methods("GET")
     return router
 }

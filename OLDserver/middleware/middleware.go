@@ -2,6 +2,9 @@ package middleware
 
 import (
     "encoding/json"
+    "fmt"
+    "strings"
+    "time"
     "net/http"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/OLDmodels"
     "github.com/gorilla/mux"
@@ -73,6 +76,14 @@ func DeleteTodo(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
+    
+    // Delete associated routines first
+    if err := models.DeleteRoutinesByTaskID(params["id"]); err != nil {
+        http.Error(w, "Failed to delete associated routines: "+err.Error(), http.StatusInternalServerError)
+        return
+    }
+    
+    // Then delete the todo
     err := models.DeleteTodo(params["id"], userID)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -80,7 +91,6 @@ func DeleteTodo(w http.ResponseWriter, r *http.Request) {
     }
     json.NewEncoder(w).Encode(map[string]string{"result": "success"})
 }
-
 // Undo a todo
 func UndoTodo(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
@@ -333,4 +343,205 @@ func AddTeamMember(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(map[string]string{"result": "success"})
 }
 
+// CreateOrUpdateRoutines updates the routines for a task
+func CreateOrUpdateRoutines(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    
+    var request struct {
+        TaskID    string   `json:"taskId"`
+        Schedules []string `json:"schedules"` // morning, noon, evening, night
+        Day       string   `json:"day"`       // day of the week
+    }
+    
+    if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+        http.Error(w, "Invalid request payload", http.StatusBadRequest)
+        return
+    }
 
+    // Debug logging
+    fmt.Printf("CreateOrUpdateRoutines called with taskID=%s, schedules=%v, day=%s\n", 
+        request.TaskID, request.Schedules, request.Day)
+    
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    
+    // Use the provided day or default to current day
+    dayName := request.Day
+    if dayName == "" {
+        dayName = strings.ToLower(time.Now().Weekday().String())
+    }
+
+    // First, get existing routines for this task and user
+    existingRoutines, err := models.GetRoutinesByTaskID(request.TaskID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    
+    // Filter routines for this user
+    var userRoutines []models.Routine
+    for _, routine := range existingRoutines {
+        if routine.UserID == userID {
+            userRoutines = append(userRoutines, routine)
+        }
+    }
+    
+    // Track which schedule types we find and update
+    scheduleTypesProcessed := make(map[string]bool)
+    var createdRoutines []models.Routine
+    
+    // First, process existing routines - update or deactivate them
+    for i := range userRoutines {
+        routine := userRoutines[i]
+        // If this schedule type is in the request for any day
+        if contains(request.Schedules, routine.ScheduleType) {
+            // This schedule type is requested, check if day needs updating
+            if routine.Day != dayName {
+                // Update the day for this routine
+                fmt.Printf("Updating day for routine: ID=%s, scheduleType=%s, old day=%s, new day=%s\n",
+                    routine.ID, routine.ScheduleType, routine.Day, dayName)
+                
+                if err := models.UpdateRoutineDay(routine.ID, dayName); err != nil {
+                    http.Error(w, "Failed to update routine day: "+err.Error(), http.StatusInternalServerError)
+                    return
+                }
+                // Update our copy as well
+                routine.Day = dayName
+            }
+            
+            // Make sure the routine is active
+            if !routine.IsActive {
+                if err := models.UpdateRoutineStatus(routine.ID, true); err != nil {
+                    http.Error(w, "Failed to update routine status: "+err.Error(), http.StatusInternalServerError)
+                    return
+                }
+                routine.IsActive = true
+            }
+            
+            // Mark this schedule type as processed
+            scheduleTypesProcessed[routine.ScheduleType] = true
+            createdRoutines = append(createdRoutines, routine)
+        } else if routine.Day == dayName {
+            // This schedule type is not requested for this day, deactivate it
+            fmt.Printf("Deactivating routine: ID=%s, scheduleType=%s, day=%s\n",
+                routine.ID, routine.ScheduleType, routine.Day)
+            
+            if err := models.UpdateRoutineStatus(routine.ID, false); err != nil {
+                http.Error(w, "Failed to deactivate routine: "+err.Error(), http.StatusInternalServerError)
+                return
+            }
+        }
+    }
+    
+    // Now create any new routines for schedule types not yet processed
+    for _, scheduleType := range request.Schedules {
+        if !scheduleTypesProcessed[scheduleType] {
+            fmt.Printf("Creating new routine: taskID=%s, scheduleType=%s, day=%s\n",
+                request.TaskID, scheduleType, dayName)
+            
+            // Create a new routine for this schedule type
+            newRoutine, err := models.CreateRoutine(dayName, scheduleType, request.TaskID, userID)
+            if err != nil {
+                http.Error(w, "Failed to create routine: "+err.Error(), http.StatusInternalServerError)
+                return
+            }
+            createdRoutines = append(createdRoutines, newRoutine)
+        }
+    }
+    
+    json.NewEncoder(w).Encode(createdRoutines)
+}
+
+// Helper function to check if a string is in a slice
+func contains(slice []string, item string) bool {
+    for _, s := range slice {
+        if s == item {
+            return true
+        }
+    }
+    return false
+}
+
+// GetTodayRoutines returns all tasks for today's routines by schedule type
+func GetTodayRoutines(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    
+    params := mux.Vars(r)
+    scheduleType := params["scheduleType"]
+    
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    
+    todos, err := models.GetTodayRoutines(scheduleType, userID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    
+    json.NewEncoder(w).Encode(todos)
+}
+
+// GetRoutinesByTask returns all routines for a specific task
+func GetRoutinesByTask(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    
+    params := mux.Vars(r)
+    taskID := params["taskId"]
+    
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    
+    routines, err := models.GetRoutinesByTaskID(taskID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    
+    // Filter routines for this user only
+    var userRoutines []models.Routine
+    for _, routine := range routines {
+        if routine.UserID == userID {
+            userRoutines = append(userRoutines, routine)
+        }
+    }
+    
+    json.NewEncoder(w).Encode(userRoutines)
+}
+
+
+// Add this new handler function
+func GetRoutinesByDayAndSchedule(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    
+    params := mux.Vars(r)
+    day := params["day"]
+    scheduleType := params["scheduleType"]
+    
+    // Debug logging
+    fmt.Printf("GetRoutinesByDayAndSchedule called with day=%s, scheduleType=%s\n", day, scheduleType)
+    
+    userID, ok := r.Context().Value("userID").(string)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+    
+    todos, err := models.GetDailyRoutines(day, scheduleType, userID)
+    if err != nil {
+        // More debug logging
+        fmt.Printf("Error in GetDailyRoutines: %v\n", err)
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    
+    json.NewEncoder(w).Encode(todos)
+}

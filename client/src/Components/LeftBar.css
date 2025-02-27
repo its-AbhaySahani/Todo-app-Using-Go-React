@@ -47,3 +47,23 @@
     display: none; /* Hide sidebar on smaller screens */
   }
 }
+
+/* Add this to client/src/Components/LeftBar.css */
+.leftbar-bottom {
+  margin-top: auto;
+  padding: 20px 0;
+}
+
+.routine-button {
+  background-color: var(--accent-color, #9a48ad);
+  color: white;
+  padding: 10px 15px;
+  width: 100%;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.routine-button:hover {
+  background-color: var(--accent-hover-color, #b66ad0);
+}
