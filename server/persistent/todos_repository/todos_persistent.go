@@ -5,6 +5,7 @@ import (
     "database/sql"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models/db"
     "time"
+    "fmt"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/dto"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
 )
@@ -41,22 +42,15 @@ func (r *TodoRepository) GetTodosByUserID(ctx context.Context, userID string) ([
         return nil, err
     }
     
-    // Convert db.Todo to domain.Todo with proper time handling
+    // Log the types to understand what we're dealing with
+    if len(todos) > 0 {
+        fmt.Printf("Date type: %T\n", todos[0].Date)
+        fmt.Printf("Time type: %T\n", todos[0].Time)
+    }
+    
+    // Convert db.Todo to domain.Todo
     domainTodos := make([]domain.Todo, len(todos))
     for i, todo := range todos {
-        var date time.Time
-        var timeVal time.Time
-        
-        // Handle date conversion safely
-        if todo.Date.Valid {
-            date = todo.Date.Time
-        }
-        
-        // Handle time conversion safely
-        if todo.Time.Valid {
-            timeVal = todo.Time.Time
-        }
-        
         domainTodos[i] = domain.Todo{
             ID:          todo.ID,
             Task:        todo.Task,
@@ -64,8 +58,24 @@ func (r *TodoRepository) GetTodosByUserID(ctx context.Context, userID string) ([
             Done:        todo.Done,
             Important:   todo.Important,
             UserID:      todo.UserID.String,
-            Date:        date,
-            Time:        timeVal,
+            // Skip date/time for now to see if code works otherwise
+        }
+        
+        // Add a type switch to handle different date/time types
+        switch d := todo.Date.(type) {
+        case time.Time:
+            domainTodos[i].Date = d
+        case string:
+            parsed, _ := time.Parse("2006-01-02", d)
+            domainTodos[i].Date = parsed
+        }
+        
+        switch t := todo.Time.(type) {
+        case time.Time:
+            domainTodos[i].Time = t
+        case string:
+            parsed, _ := time.Parse("15:04:05", t)
+            domainTodos[i].Time = parsed
         }
     }
     
@@ -124,11 +134,49 @@ func (r *TodoRepository) CreateTodoWithDTO(ctx context.Context, req *dto.CreateT
 }
 
 func (r *TodoRepository) GetTodosByUserIDWithDTO(ctx context.Context, userID string) (*dto.TodosResponse, error) {
-    todos, err := r.querier.GetTodosByUserID(ctx, sql.NullString{String: userID, Valid: true})
+    todosRows, err := r.querier.GetTodosByUserID(ctx, sql.NullString{String: userID, Valid: true})
     if err != nil {
         return nil, err
     }
-    return dto.NewTodosResponse(todos), nil
+    
+    // Convert []db.GetTodosByUserIDRow to []dto.TodoResponse
+    var todoResponses []dto.TodoResponse
+    for _, todo := range todosRows {
+        // Handle date and time based on their types
+        var date time.Time
+        var timeVal time.Time
+        
+        // Handle date conversion
+        switch d := todo.Date.(type) {
+        case time.Time:
+            date = d
+        case string:
+            parsed, _ := time.Parse("2006-01-02", d)
+            date = parsed
+        }
+        
+        // Handle time conversion
+        switch t := todo.Time.(type) {
+        case time.Time:
+            timeVal = t
+        case string:
+            parsed, _ := time.Parse("15:04:05", t)
+            timeVal = parsed
+        }
+        
+        todoResponses = append(todoResponses, dto.TodoResponse{
+            ID:          todo.ID,
+            Task:        todo.Task,
+            Description: todo.Description.String,
+            Done:        todo.Done,
+            Important:   todo.Important,
+            UserID:      todo.UserID.String,
+            Date:        date,
+            Time:        timeVal,
+        })
+    }
+    
+    return &dto.TodosResponse{Todos: todoResponses}, nil
 }
 
 func (r *TodoRepository) UpdateTodoWithDTO(ctx context.Context, req *dto.UpdateTodoRequest) (*dto.SuccessResponse, error) {

@@ -5,6 +5,7 @@ import (
     "encoding/json"
     "net/http"
     "time"
+    "log"
     
     "github.com/gorilla/mux"
     "github.com/dgrijalva/jwt-go"
@@ -15,6 +16,7 @@ import (
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/services/team_members"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/services/team_todos"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/services/shared_todos"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/services/routines"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/dto"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/handler/middleware"
 )
@@ -105,13 +107,25 @@ func GetTodos(todoService *todos.TodoService) http.HandlerFunc {
         w.Header().Set("Content-Type", "application/json")
         
         userID := r.Context().Value(middleware.UserIDKey).(string)
-        res, err := todoService.GetTodosByUserID(context.Background(), userID)
+        
+        todosResponse, err := todoService.GetTodosByUserID(context.Background(), userID)
         if err != nil {
+            log.Printf("Error getting todos: %v", err) // Add logging to help debug
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
         }
         
-        json.NewEncoder(w).Encode(res)
+        // Format the date and time as strings for the client
+        for i := range todosResponse.Todos {
+            if !todosResponse.Todos[i].Date.IsZero() {
+                todosResponse.Todos[i].Date = todosResponse.Todos[i].Date.UTC()
+            }
+            if !todosResponse.Todos[i].Time.IsZero() {
+                todosResponse.Todos[i].Time = todosResponse.Todos[i].Time.UTC()
+            }
+        }
+        
+        json.NewEncoder(w).Encode(todosResponse.Todos)
     }
 }
 
@@ -444,6 +458,187 @@ func RemoveTeamMember(teamMemberService *team_members.TeamMemberService) http.Ha
         params := mux.Vars(r)
         
         res, err := teamMemberService.RemoveTeamMember(context.Background(), params["teamId"], params["userId"])
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        
+        json.NewEncoder(w).Encode(res)
+    }
+}
+
+
+// Routine Handlers
+
+// CreateRoutine creates a new routine
+func CreateRoutine(routineService *routines.RoutineService) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        
+        var req dto.CreateRoutineRequest
+        if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+            http.Error(w, "Invalid request payload", http.StatusBadRequest)
+            return
+        }
+        
+        // Set the user ID from the context
+        userID := r.Context().Value(middleware.UserIDKey).(string)
+        req.UserID = userID
+        
+        res, err := routineService.CreateRoutine(context.Background(), &req)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        
+        json.NewEncoder(w).Encode(res)
+    }
+}
+
+// UpdateRoutineStatus updates the active status of a routine
+func UpdateRoutineStatus(routineService *routines.RoutineService) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        
+        var req dto.UpdateRoutineStatusRequest
+        if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+            http.Error(w, "Invalid request payload", http.StatusBadRequest)
+            return
+        }
+        
+        // Set the ID from the URL parameter
+        req.ID = mux.Vars(r)["id"]
+        
+        res, err := routineService.UpdateRoutineStatus(context.Background(), req.ID, req.IsActive)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        
+        json.NewEncoder(w).Encode(res)
+    }
+}
+
+// UpdateRoutineDay updates the day of a routine
+func UpdateRoutineDay(routineService *routines.RoutineService) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        
+        var req dto.UpdateRoutineDayRequest
+        if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+            http.Error(w, "Invalid request payload", http.StatusBadRequest)
+            return
+        }
+        
+        // Set the ID from the URL parameter
+        req.ID = mux.Vars(r)["id"]
+        
+        res, err := routineService.UpdateRoutineDay(context.Background(), req.ID, req.Day)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        
+        json.NewEncoder(w).Encode(res)
+    }
+}
+
+// GetRoutinesByTaskID gets routines for a specific task
+func GetRoutinesByTaskID(routineService *routines.RoutineService) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        
+        // Get the task ID from the URL parameter
+        taskID := mux.Vars(r)["taskId"]
+        
+        res, err := routineService.GetRoutinesByTaskID(context.Background(), taskID)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        
+        json.NewEncoder(w).Encode(res)
+    }
+}
+
+// GetDailyRoutines gets todos for a specific day and schedule type
+func GetDailyRoutines(routineService *routines.RoutineService) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        
+        // Get parameters from URL
+        params := mux.Vars(r)
+        day := params["day"]
+        scheduleType := params["scheduleType"]
+        
+        // Get the user ID from the context
+        userID := r.Context().Value(middleware.UserIDKey).(string)
+        
+        res, err := routineService.GetDailyRoutines(context.Background(), day, scheduleType, userID)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        
+        json.NewEncoder(w).Encode(res.Todos)
+    }
+}
+
+// GetTodayRoutines gets todos for today by schedule type
+func GetTodayRoutines(routineService *routines.RoutineService) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        
+        // Get the schedule type from URL
+        scheduleType := mux.Vars(r)["scheduleType"]
+        
+        // Get the user ID from the context
+        userID := r.Context().Value(middleware.UserIDKey).(string)
+        
+        res, err := routineService.GetTodayRoutines(context.Background(), scheduleType, userID)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        
+        json.NewEncoder(w).Encode(res.Todos)
+    }
+}
+
+// DeleteRoutinesByTaskID deletes all routines for a task
+func DeleteRoutinesByTaskID(routineService *routines.RoutineService) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        
+        // Get the task ID from the URL parameter
+        taskID := mux.Vars(r)["taskId"]
+        
+        res, err := routineService.DeleteRoutinesByTaskID(context.Background(), taskID)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        
+        json.NewEncoder(w).Encode(res)
+    }
+}
+
+// CreateOrUpdateRoutines creates or updates routines for a task
+func CreateOrUpdateRoutines(routineService *routines.RoutineService) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        
+        var req dto.CreateOrUpdateRoutinesRequest
+        if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+            http.Error(w, "Invalid request payload", http.StatusBadRequest)
+            return
+        }
+        
+        // Set the user ID from the context
+        userID := r.Context().Value(middleware.UserIDKey).(string)
+        req.UserID = userID
+        
+        res, err := routineService.CreateOrUpdateRoutines(context.Background(), &req)
         if err != nil {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return

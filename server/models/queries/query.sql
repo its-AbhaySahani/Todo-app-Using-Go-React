@@ -29,7 +29,15 @@ VALUES (
 );
 
 -- name: GetTodosByUserID :many
-SELECT id, task, description, done, important, user_id, date, time
+SELECT 
+  id, 
+  task, 
+  description, 
+  done, 
+  important, 
+  user_id, 
+  CAST(date AS CHAR) AS date, 
+  CAST(time AS CHAR) AS time
 FROM todos
 WHERE user_id = ? /* sqlc.arg(userID) */;
 

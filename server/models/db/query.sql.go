@@ -650,20 +650,39 @@ func (q *Queries) GetTeamsByAdminID(ctx context.Context, adminID string) ([]Team
 }
 
 const getTodosByUserID = `-- name: GetTodosByUserID :many
-SELECT id, task, description, done, important, user_id, date, time
+SELECT 
+  id, 
+  task, 
+  description, 
+  done, 
+  important, 
+  user_id, 
+  CAST(date AS CHAR) AS date, 
+  CAST(time AS CHAR) AS time
 FROM todos
 WHERE user_id = ? /* sqlc.arg(userID) */
 `
 
-func (q *Queries) GetTodosByUserID(ctx context.Context, userID sql.NullString) ([]Todo, error) {
+type GetTodosByUserIDRow struct {
+	ID          string
+	Task        string
+	Description sql.NullString
+	Done        bool
+	Important   bool
+	UserID      sql.NullString
+	Date        interface{}
+	Time        interface{}
+}
+
+func (q *Queries) GetTodosByUserID(ctx context.Context, userID sql.NullString) ([]GetTodosByUserIDRow, error) {
 	rows, err := q.db.QueryContext(ctx, getTodosByUserID, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Todo
+	var items []GetTodosByUserIDRow
 	for rows.Next() {
-		var i Todo
+		var i GetTodosByUserIDRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Task,
