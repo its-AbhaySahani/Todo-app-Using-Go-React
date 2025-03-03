@@ -1,29 +1,18 @@
 package TestCases
 
 import (
-    "bytes"
-    "context"
-    "encoding/json"
     "fmt"
-    "net/http"
-    "net/http/httptest"
     "testing"
+    "time"
 
-    "github.com/gorilla/mux"
+    "github.com/google/uuid"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/Database"
-    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/middleware"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/OLDmodels"
 )
 
 // Test User ID that will be used consistently across all tests
 const testUserID = "todo-test-user-id"
 const testUsername = "todo_testuser" // Different from "testuser" used in auth tests
-
-// Helper function to add a userID to the request context
-func addUserIDToContext(r *http.Request, userID string) *http.Request {
-    ctx := context.WithValue(r.Context(), "userID", userID)
-    return r.WithContext(ctx)
-}
 
 // Helper function to ensure the test user exists
 func ensureTestUserExists(t *testing.T) {
@@ -68,64 +57,97 @@ func cleanupTodoTestData() {
     }
 }
 
-// TestGetTodos tests the GetTodos endpoint
+// Global variable to store a todo ID for use in update/delete tests
+var todoID string
+
+// TestGetTodos tests the GetTodos function directly
 func TestGetTodos(t *testing.T) {
     fmt.Println("\nRUNNING TEST: TestGetTodos")
-    fmt.Println("Testing getting todos for the authenticated user")
+    fmt.Println("Testing getting todos for the user")
     
     // Clean up before test to ensure fresh state
     cleanupTodoTestData()
     
     // Ensure test user exists
     ensureTestUserExists(t)
-
-    // Generate a valid token for testing
-    token, err := generateToken(testUsername, testUserID)
+    
+    // First create a few test todos for the user
+    task1 := "Test Task 1"
+    desc1 := "Test Description 1"
+    
+    // Create first todo directly using the model function
+    todo1, err := models.CreateTodo(task1, desc1, true, testUserID)
     if err != nil {
-        t.Fatal("Failed to generate token:", err)
+        t.Fatalf("Failed to create first test todo: %v", err)
     }
-
-    // Create a new request
-    req, err := http.NewRequest("GET", "/api/todos", nil)
+    fmt.Printf("Created first todo with ID: %s\n", todo1.ID)
+    
+    // Create second todo
+    task2 := "Test Task 2"
+    desc2 := "Test Description 2"
+    todo2, err := models.CreateTodo(task2, desc2, false, testUserID)
     if err != nil {
-        t.Fatal("Failed to create request:", err)
+        t.Fatalf("Failed to create second test todo: %v", err)
     }
+    fmt.Printf("Created second todo with ID: %s\n", todo2.ID)
     
-    // Add authorization header
-    req.Header.Set("Authorization", "Bearer "+token)
-
-    // Create a response recorder
-    rr := httptest.NewRecorder()
-    
-    // Create a context-aware handler
-    handler := http.HandlerFunc(middleware.GetTodos)
-    
-    // Create a request with user ID in context
-    req = addUserIDToContext(req, testUserID)
-    
-    // Serve the request
-    fmt.Println("Sending request to get todos")
-    handler.ServeHTTP(rr, req)
-
-    // Check the status code
-    if status := rr.Code; status != http.StatusOK {
-        t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
-        fmt.Printf("Response body: %s\n", rr.Body.String())
-        return
-    }
-
-    // Parse the response
-    var todos []models.Todo
-    err = json.NewDecoder(rr.Body).Decode(&todos)
+    // Now retrieve all todos for the user
+    todos, err := models.GetTodos(testUserID)
     if err != nil {
-        t.Fatalf("Failed to parse response body: %v\nResponse body: %s", err, rr.Body.String())
+        t.Fatalf("Failed to get todos: %v", err)
     }
-
-    fmt.Printf("Retrieved %d todos\n", len(todos))
+    
+    // Verify we retrieved the correct number of todos
+    if len(todos) != 2 {
+        t.Errorf("Expected 2 todos, got %d", len(todos))
+    } else {
+        fmt.Printf("Retrieved %d todos as expected\n", len(todos))
+    }
+    
+    // Verify the todo details are correct
+    foundTodo1 := false
+    foundTodo2 := false
+    
+    for _, todo := range todos {
+        if todo.ID == todo1.ID {
+            foundTodo1 = true
+            if todo.Task != task1 {
+                t.Errorf("Expected task '%s', got '%s'", task1, todo.Task)
+            }
+            if todo.Description != desc1 {
+                t.Errorf("Expected description '%s', got '%s'", desc1, todo.Description)
+            }
+            if !todo.Important {
+                t.Errorf("Expected todo to be important, but it's not")
+            }
+        } else if todo.ID == todo2.ID {
+            foundTodo2 = true
+            if todo.Task != task2 {
+                t.Errorf("Expected task '%s', got '%s'", task2, todo.Task)
+            }
+            if todo.Description != desc2 {
+                t.Errorf("Expected description '%s', got '%s'", desc2, todo.Description)
+            }
+            if todo.Important {
+                t.Errorf("Expected todo to not be important, but it is")
+            }
+        }
+    }
+    
+    if !foundTodo1 {
+        t.Errorf("First todo not found in retrieved todos")
+    }
+    if !foundTodo2 {
+        t.Errorf("Second todo not found in retrieved todos")
+    }
+    
+    // Save one ID for later tests
+    todoID = todo1.ID
+    
     fmt.Println("GetTodos test passed")
 }
 
-// TestCreateTodo tests the CreateTodo endpoint
+// TestCreateTodo tests the CreateTodo function directly
 func TestCreateTodo(t *testing.T) {
     fmt.Println("\nRUNNING TEST: TestCreateTodo")
     fmt.Println("Testing creating a new todo")
@@ -133,67 +155,75 @@ func TestCreateTodo(t *testing.T) {
     // Ensure test user exists
     ensureTestUserExists(t)
     
-    // Create a request body with todo details
-    var jsonStr = []byte(`{"task":"Test Task", "description":"Test Description", "important":true}`)
-    req, err := http.NewRequest("POST", "/api/todo", bytes.NewBuffer(jsonStr))
+    // Create a new todo directly using the model function
+    task := "Functional Test Task"
+    description := "Functional Test Description"
+    important := true
+    
+    todo, err := models.CreateTodo(task, description, important, testUserID)
     if err != nil {
-        t.Fatal("Failed to create request:", err)
+        t.Fatalf("Failed to create todo: %v", err)
     }
-    req.Header.Set("Content-Type", "application/json")
-
-    // Create a response recorder
-    rr := httptest.NewRecorder()
     
-    // Create a handler
-    handler := http.HandlerFunc(middleware.CreateTodo)
-    
-    // Create a request with user ID in context
-    req = addUserIDToContext(req, testUserID)
-    
-    // Serve the request
-    fmt.Println("Sending request to create todo")
-    handler.ServeHTTP(rr, req)
-
-    // Check the status code
-    if status := rr.Code; status != http.StatusOK {
-        t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
-        fmt.Printf("Response body: %s\n", rr.Body.String())
-        return
-    }
-
-    // Parse the response
-    var todo models.Todo
-    err = json.NewDecoder(rr.Body).Decode(&todo)
-    if err != nil {
-        t.Fatalf("Failed to parse response body: %v\nResponse body: %s", err, rr.Body.String())
-    }
-
-    // Validate the response
-    if todo.Task != "Test Task" {
-        t.Errorf("Handler returned unexpected task: got %v want %v", todo.Task, "Test Task")
-    }
-    if todo.Description != "Test Description" {
-        t.Errorf("Handler returned unexpected description: got %v want %v", todo.Description, "Test Description")
-    }
-    if !todo.Important {
-        t.Errorf("Handler returned unexpected important flag: got %v want %v", todo.Important, true)
-    }
-    if todo.Done {
-        t.Errorf("Handler returned unexpected done flag: got %v want %v", todo.Done, false)
-    }
+    // Verify the todo was created with the correct data
     if todo.ID == "" {
-        t.Errorf("Handler returned empty todo ID")
+        t.Errorf("Todo was created but ID is empty")
     } else {
-        fmt.Printf("Todo created with ID: %s\n", todo.ID)
+        fmt.Printf("Created todo with ID: %s\n", todo.ID)
     }
     
-    // Save the todo ID for update/delete tests
+    if todo.Task != task {
+        t.Errorf("Expected task '%s', got '%s'", task, todo.Task)
+    }
+    
+    if todo.Description != description {
+        t.Errorf("Expected description '%s', got '%s'", description, todo.Description)
+    }
+    
+    if !todo.Important {
+        t.Errorf("Expected todo to be important, but it's not")
+    }
+    
+    if todo.Done {
+        t.Errorf("Expected todo to not be done, but it is")
+    }
+    
+    // Verify the todo exists in the database
+    var dbTask, dbDescription string
+    var dbDone, dbImportant bool
+    
+    err = database.DB.QueryRow(
+        "SELECT task, description, done, important FROM todos WHERE id = ? AND user_id = ?", 
+        todo.ID, testUserID,
+    ).Scan(&dbTask, &dbDescription, &dbDone, &dbImportant)
+    
+    if err != nil {
+        t.Fatalf("Failed to retrieve todo from database: %v", err)
+    }
+    
+    if dbTask != task {
+        t.Errorf("Database task '%s' doesn't match expected task '%s'", dbTask, task)
+    }
+    
+    if dbDescription != description {
+        t.Errorf("Database description '%s' doesn't match expected description '%s'", dbDescription, description)
+    }
+    
+    if !dbImportant {
+        t.Errorf("Expected todo to be important in database, but it's not")
+    }
+    
+    if dbDone {
+        t.Errorf("Expected todo to not be done in database, but it is")
+    }
+    
+    // Save ID for later tests if needed
     todoID = todo.ID
     
     fmt.Println("CreateTodo test passed")
 }
 
-// TestUpdateTodo tests the UpdateTodo endpoint
+// TestUpdateTodo tests the UpdateTodo function directly
 func TestUpdateTodo(t *testing.T) {
     fmt.Println("\nRUNNING TEST: TestUpdateTodo")
     fmt.Println("Testing updating an existing todo")
@@ -206,57 +236,71 @@ func TestUpdateTodo(t *testing.T) {
         TestCreateTodo(t)
     }
     
-    // Create a request body with updated todo details
-    var jsonStr = []byte(`{"task":"Updated Task", "description":"Updated Description", "important":true, "done":true}`)
-    req, err := http.NewRequest("PUT", "/api/todo/"+todoID, bytes.NewBuffer(jsonStr))
+    // Update the todo directly using the model function
+    updatedTask := "Updated Functional Task"
+    updatedDesc := "Updated Functional Description"
+    updatedDone := true
+    updatedImportant := false
+    
+    updatedTodo, err := models.UpdateTodo(todoID, updatedTask, updatedDesc, updatedDone, updatedImportant, testUserID)
     if err != nil {
-        t.Fatal("Failed to create request:", err)
+        t.Fatalf("Failed to update todo: %v", err)
     }
-    req.Header.Set("Content-Type", "application/json")
-
-    // Set up router with variables
-    router := mux.NewRouter()
-    router.HandleFunc("/api/todo/{id}", middleware.UpdateTodo).Methods("PUT")
     
-    // Create a response recorder
-    rr := httptest.NewRecorder()
-    
-    // Create a request with user ID in context
-    req = addUserIDToContext(req, testUserID)
-    
-    // Serve the request
-    fmt.Println("Sending request to update todo")
-    router.ServeHTTP(rr, req)
-
-    // Check the status code
-    if status := rr.Code; status != http.StatusOK {
-        t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
-        fmt.Printf("Response body: %s\n", rr.Body.String())
-        return
+    // Verify the todo was updated with the correct data
+    if updatedTodo.ID != todoID {
+        t.Errorf("Expected todo ID '%s', got '%s'", todoID, updatedTodo.ID)
     }
-
-    // Parse the response
-    var todo models.Todo
-    err = json.NewDecoder(rr.Body).Decode(&todo)
+    
+    if updatedTodo.Task != updatedTask {
+        t.Errorf("Expected task '%s', got '%s'", updatedTask, updatedTodo.Task)
+    }
+    
+    if updatedTodo.Description != updatedDesc {
+        t.Errorf("Expected description '%s', got '%s'", updatedDesc, updatedTodo.Description)
+    }
+    
+    if !updatedTodo.Done {
+        t.Errorf("Expected todo to be done, but it's not")
+    }
+    
+    if updatedTodo.Important {
+        t.Errorf("Expected todo to not be important, but it is")
+    }
+    
+    // Verify the todo was updated in the database
+    var dbTask, dbDescription string
+    var dbDone, dbImportant bool
+    
+    err = database.DB.QueryRow(
+        "SELECT task, description, done, important FROM todos WHERE id = ? AND user_id = ?", 
+        todoID, testUserID,
+    ).Scan(&dbTask, &dbDescription, &dbDone, &dbImportant)
+    
     if err != nil {
-        t.Fatalf("Failed to parse response body: %v\nResponse body: %s", err, rr.Body.String())
+        t.Fatalf("Failed to retrieve updated todo from database: %v", err)
     }
-
-    // Validate the response
-    if todo.Task != "Updated Task" {
-        t.Errorf("Handler returned unexpected task: got %v want %v", todo.Task, "Updated Task")
+    
+    if dbTask != updatedTask {
+        t.Errorf("Database task '%s' doesn't match expected task '%s'", dbTask, updatedTask)
     }
-    if todo.Description != "Updated Description" {
-        t.Errorf("Handler returned unexpected description: got %v want %v", todo.Description, "Updated Description")
+    
+    if dbDescription != updatedDesc {
+        t.Errorf("Database description '%s' doesn't match expected description '%s'", dbDescription, updatedDesc)
     }
-    if !todo.Done {
-        t.Errorf("Handler returned unexpected done flag: got %v want %v", todo.Done, true)
+    
+    if !dbDone {
+        t.Errorf("Expected todo to be done in database, but it's not")
+    }
+    
+    if dbImportant {
+        t.Errorf("Expected todo to not be important in database, but it is")
     }
     
     fmt.Println("UpdateTodo test passed")
 }
 
-// TestUndoTodo tests the UndoTodo endpoint
+// TestUndoTodo tests the UndoTodo function directly
 func TestUndoTodo(t *testing.T) {
     fmt.Println("\nRUNNING TEST: TestUndoTodo")
     fmt.Println("Testing undoing a completed todo")
@@ -269,51 +313,66 @@ func TestUndoTodo(t *testing.T) {
         TestUpdateTodo(t)
     }
     
-    // Create a new request
-    req, err := http.NewRequest("PUT", "/api/todo/undo/"+todoID, nil)
+    // Ensure the todo is marked as done before testing undo
+    var isDone bool
+    err := database.DB.QueryRow(
+        "SELECT done FROM todos WHERE id = ? AND user_id = ?", 
+        todoID, testUserID,
+    ).Scan(&isDone)
+    
     if err != nil {
-        t.Fatal("Failed to create request:", err)
+        t.Fatalf("Failed to check if todo is done: %v", err)
     }
-
-    // Set up router with variables
-    router := mux.NewRouter()
-    router.HandleFunc("/api/todo/undo/{id}", middleware.UndoTodo).Methods("PUT")
     
-    // Create a response recorder
-    rr := httptest.NewRecorder()
-    
-    // Create a request with user ID in context
-    req = addUserIDToContext(req, testUserID)
-    
-    // Serve the request
-    fmt.Println("Sending request to undo todo")
-    router.ServeHTTP(rr, req)
-
-    // Check the status code
-    if status := rr.Code; status != http.StatusOK {
-        t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
-        fmt.Printf("Response body: %s\n", rr.Body.String())
-        return
+    if !isDone {
+        // If not done, update it to be done
+        _, err := database.DB.Exec(
+            "UPDATE todos SET done = ? WHERE id = ? AND user_id = ?", 
+            true, todoID, testUserID,
+        )
+        
+        if err != nil {
+            t.Fatalf("Failed to mark todo as done for undo test: %v", err)
+        }
     }
-
-    // Parse the response
-    var todo models.Todo
-    err = json.NewDecoder(rr.Body).Decode(&todo)
+    
+    // Now undo the todo directly using the model function
+    undoneTask, err := models.UndoTodo(todoID, testUserID)
     if err != nil {
-        t.Fatalf("Failed to parse response body: %v\nResponse body: %s", err, rr.Body.String())
+        t.Fatalf("Failed to undo todo: %v", err)
     }
-
-    // Validate the response - check that done is now false
-    if todo.Done {
-        t.Errorf("Handler returned unexpected done flag: got %v want %v", todo.Done, false)
+    
+    // Verify the todo was undone
+    if undoneTask.ID != todoID {
+        t.Errorf("Expected todo ID '%s', got '%s'", todoID, undoneTask.ID)
+    }
+    
+    if undoneTask.Done {
+        t.Errorf("Expected todo to be undone (not done), but it's still marked as done")
+    }
+    
+    // Verify the todo was undone in the database
+    var dbDone bool
+    
+    err = database.DB.QueryRow(
+        "SELECT done FROM todos WHERE id = ? AND user_id = ?", 
+        todoID, testUserID,
+    ).Scan(&dbDone)
+    
+    if err != nil {
+        t.Fatalf("Failed to retrieve undone todo from database: %v", err)
+    }
+    
+    if dbDone {
+        t.Errorf("Expected todo to be undone (not done) in database, but it's still marked as done")
     } else {
-        fmt.Println("Todo was successfully marked as undone")
+        fmt.Println("Todo was successfully marked as undone in database")
     }
     
     fmt.Println("UndoTodo test passed")
 }
 
-// TestDeleteTodo tests the DeleteTodo endpoint
+// TestDeleteTodo tests the DeleteTodo function directly
 func TestDeleteTodo(t *testing.T) {
     fmt.Println("\nRUNNING TEST: TestDeleteTodo")
     fmt.Println("Testing deleting a todo")
@@ -329,45 +388,27 @@ func TestDeleteTodo(t *testing.T) {
         }
     }
     
-    // Create a new request
-    req, err := http.NewRequest("DELETE", "/api/todo/"+todoID, nil)
+    // Delete the todo directly using the model function
+    err := models.DeleteTodo(todoID, testUserID)
     if err != nil {
-        t.Fatal("Failed to create request:", err)
+        t.Fatalf("Failed to delete todo: %v", err)
     }
-
-    // Set up router with variables
-    router := mux.NewRouter()
-    router.HandleFunc("/api/todo/{id}", middleware.DeleteTodo).Methods("DELETE")
     
-    // Create a response recorder
-    rr := httptest.NewRecorder()
+    // Verify the todo was deleted from the database
+    var count int
+    err = database.DB.QueryRow(
+        "SELECT COUNT(*) FROM todos WHERE id = ? AND user_id = ?", 
+        todoID, testUserID,
+    ).Scan(&count)
     
-    // Create a request with user ID in context
-    req = addUserIDToContext(req, testUserID)
-    
-    // Serve the request
-    fmt.Println("Sending request to delete todo")
-    router.ServeHTTP(rr, req)
-
-    // Check the status code
-    if status := rr.Code; status != http.StatusOK {
-        t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
-        fmt.Printf("Response body: %s\n", rr.Body.String())
-        return
-    }
-
-    // Parse the response
-    var response map[string]string
-    err = json.NewDecoder(rr.Body).Decode(&response)
     if err != nil {
-        t.Fatalf("Failed to parse response body: %v\nResponse body: %s", err, rr.Body.String())
+        t.Fatalf("Failed to check if todo was deleted: %v", err)
     }
-
-    // Validate the response
-    if response["result"] != "success" {
-        t.Errorf("Handler returned unexpected result: got %v want %v", response["result"], "success")
+    
+    if count != 0 {
+        t.Errorf("Expected todo to be deleted from database, but it still exists")
     } else {
-        fmt.Println("Todo was successfully deleted")
+        fmt.Println("Todo was successfully deleted from database")
     }
     
     fmt.Println("DeleteTodo test passed")
@@ -379,5 +420,136 @@ func TestDeleteTodo(t *testing.T) {
     cleanupTodoTestData()
 }
 
-// Global variable to store a todo ID for use in update/delete tests
-var todoID string
+// TestGetDailyRoutines tests the GetDailyRoutines function
+func TestGetDailyRoutines(t *testing.T) {
+    fmt.Println("\nRUNNING TEST: TestGetDailyRoutines")
+    fmt.Println("Testing retrieving routines for a specific day and schedule type")
+    
+    // Ensure test user exists and clean up data
+    cleanupTodoTestData()
+    ensureTestUserExists(t)
+    
+    // Create a test todo
+    todo, err := models.CreateTodo("Routine Test Task", "Test routine task", false, testUserID)
+    if err != nil {
+        t.Fatalf("Failed to create todo for routine test: %v", err)
+    }
+    
+    // Get today's day name in lowercase
+    today := time.Now().Weekday().String()
+    day := today
+    scheduleType := "morning"
+    
+    // Create a routine directly in the database
+    routineID := uuid.New().String()
+    currentDate := time.Now().Format("2006-01-02")
+    
+    _, err = database.DB.Exec(
+        "INSERT INTO routines (id, day, scheduleType, taskId, userId, createdAt, updatedAt, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        routineID, day, scheduleType, todo.ID, testUserID, currentDate, currentDate, true,
+    )
+    
+    if err != nil {
+        t.Fatalf("Failed to create routine: %v", err)
+    }
+    
+    // Now test the GetDailyRoutines function
+    routineTodos, err := models.GetDailyRoutines(day, scheduleType, testUserID)
+    if err != nil {
+        t.Fatalf("Failed to get daily routines: %v", err)
+    }
+    
+    // Verify we got the correct routines
+    if len(routineTodos) != 1 {
+        t.Errorf("Expected 1 routine todo, got %d", len(routineTodos))
+    } else {
+        fmt.Printf("Retrieved %d routine todos as expected\n", len(routineTodos))
+        
+        // Verify the routine todo details
+        routineTodo := routineTodos[0]
+        if routineTodo.ID != todo.ID {
+            t.Errorf("Expected todo ID '%s', got '%s'", todo.ID, routineTodo.ID)
+        }
+        
+        if routineTodo.Task != "Routine Test Task" {
+            t.Errorf("Expected task 'Routine Test Task', got '%s'", routineTodo.Task)
+        }
+    }
+    
+    // Clean up by deleting the routine
+    _, err = database.DB.Exec("DELETE FROM routines WHERE id = ?", routineID)
+    if err != nil {
+        fmt.Printf("Warning: Failed to delete test routine: %v\n", err)
+    }
+    
+    // Clean up the todo
+    cleanupTodoTestData()
+    
+    fmt.Println("GetDailyRoutines test passed")
+}
+
+// TestUpdateRoutineDay tests the UpdateRoutineDay function
+func TestUpdateRoutineDay(t *testing.T) {
+    fmt.Println("\nRUNNING TEST: TestUpdateRoutineDay")
+    fmt.Println("Testing updating a routine's day")
+    
+    // Ensure test user exists and clean up data
+    cleanupTodoTestData()
+    ensureTestUserExists(t)
+    
+    // Create a test todo
+    todo, err := models.CreateTodo("Routine Day Update Test", "Test routine day update", false, testUserID)
+    if err != nil {
+        t.Fatalf("Failed to create todo for routine test: %v", err)
+    }
+    
+    // Create a routine directly in the database
+    routineID := uuid.New().String()
+    currentDate := time.Now().Format("2006-01-02")
+    initialDay := "monday"
+    scheduleType := "evening"
+    
+    _, err = database.DB.Exec(
+        "INSERT INTO routines (id, day, scheduleType, taskId, userId, createdAt, updatedAt, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        routineID, initialDay, scheduleType, todo.ID, testUserID, currentDate, currentDate, true,
+    )
+    
+    if err != nil {
+        t.Fatalf("Failed to create routine: %v", err)
+    }
+    
+    // Update the routine day
+    newDay := "friday"
+    err = models.UpdateRoutineDay(routineID, newDay)
+    if err != nil {
+        t.Fatalf("Failed to update routine day: %v", err)
+    }
+    
+    // Verify the day was updated in the database
+    var dbDay string
+    err = database.DB.QueryRow(
+        "SELECT day FROM routines WHERE id = ?", 
+        routineID,
+    ).Scan(&dbDay)
+    
+    if err != nil {
+        t.Fatalf("Failed to retrieve updated routine from database: %v", err)
+    }
+    
+    if dbDay != newDay {
+        t.Errorf("Expected routine day '%s', got '%s'", newDay, dbDay)
+    } else {
+        fmt.Println("Routine day was successfully updated in database")
+    }
+    
+    // Clean up by deleting the routine
+    _, err = database.DB.Exec("DELETE FROM routines WHERE id = ?", routineID)
+    if err != nil {
+        fmt.Printf("Warning: Failed to delete test routine: %v\n", err)
+    }
+    
+    // Clean up the todo
+    cleanupTodoTestData()
+    
+    fmt.Println("UpdateRoutineDay test passed")
+}

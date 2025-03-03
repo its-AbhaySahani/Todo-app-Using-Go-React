@@ -1,344 +1,261 @@
-// server/TestCases/team_member_test.go
-
 package TestCases
 
 import (
-    "bytes"
-    "encoding/json"
     "fmt"
-    "net/http"
-    "net/http/httptest"
     "testing"
-    "context"
 
     "github.com/google/uuid"
-    "github.com/gorilla/mux"
-    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/middleware"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/Database"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/OLDmodels"
 )
 
-var router *mux.Router
+// Constants for team member tests
+const testTeamOwnerID = "team-member-owner-id"
+const testTeamOwnerUsername = "team_member_owner"
+const testTeamMemberID = "team-member-user-id"
+const testTeamMemberUsername = "team_member_user"
+var testTeamMemberTeamID string // Will be populated when we create a test team
 
-func init() {
-    router = mux.NewRouter()
-    router.HandleFunc("/api/register", middleware.Register).Methods("POST")
-    router.HandleFunc("/api/login", middleware.Login).Methods("POST")
-    
-    apiRouter := router.PathPrefix("/api").Subrouter()
-    apiRouter.Use(middleware.AuthMiddleware)
-    
-    // Team member routes
-    apiRouter.HandleFunc("/team", middleware.CreateTeam).Methods("POST")
-    apiRouter.HandleFunc("/teams", middleware.GetTeams).Methods("GET")
-    apiRouter.HandleFunc("/team/{teamId}/members", middleware.GetTeamMembers).Methods("GET")
-    apiRouter.HandleFunc("/team/{teamId}/member", middleware.AddTeamMember).Methods("POST")
-    apiRouter.HandleFunc("/team/{teamId}/member/{userId}", middleware.RemoveTeamMember).Methods("DELETE")
+// Helper function to ensure the team owner exists
+func ensureTeamOwnerExists(t *testing.T) {
+    // Check if the user already exists
+    var count int
+    err := database.DB.QueryRow("SELECT COUNT(*) FROM users WHERE id = ?", testTeamOwnerID).Scan(&count)
+    if err != nil {
+        t.Fatalf("Failed to check if team owner exists: %v", err)
+    }
+
+    if count == 0 {
+        // Create the owner user if it doesn't exist
+        _, err := database.DB.Exec(
+            "INSERT INTO users (id, username, password) VALUES (?, ?, ?)",
+            testTeamOwnerID, testTeamOwnerUsername, "$2a$10$TestHashedPasswordForTeamOwner",
+        )
+        if err != nil {
+            t.Fatalf("Failed to create team owner: %v", err)
+        }
+        fmt.Println("Created team owner with ID:", testTeamOwnerID)
+    } else {
+        fmt.Println("Team owner already exists with ID:", testTeamOwnerID)
+    }
 }
 
-// Helper functions
-func createTestUser(t *testing.T) string {
-    // Check if test user already exists
-    testUserID := "todo-test-user-id"
-    req, _ := http.NewRequest("GET", fmt.Sprintf("/api/users/%s", testUserID), nil)
-    w := httptest.NewRecorder()
-    router.ServeHTTP(w, req)
-    
-    if w.Code == http.StatusOK {
-        t.Logf("Test user already exists with ID: %s", testUserID)
-        return testUserID
+// Helper function to ensure the team member user exists
+func ensureTeamMemberExists(t *testing.T) {
+    // Check if the user already exists
+    var count int
+    err := database.DB.QueryRow("SELECT COUNT(*) FROM users WHERE id = ?", testTeamMemberID).Scan(&count)
+    if err != nil {
+        t.Fatalf("Failed to check if team member exists: %v", err)
     }
-    
-    // Create test user if not exists
-    user := models.User{
-        Username: "testuser",
-        Password: "testpassword",
+
+    if count == 0 {
+        // Create the member user if it doesn't exist
+        _, err := database.DB.Exec(
+            "INSERT INTO users (id, username, password) VALUES (?, ?, ?)",
+            testTeamMemberID, testTeamMemberUsername, "$2a$10$TestHashedPasswordForTeamMember",
+        )
+        if err != nil {
+            t.Fatalf("Failed to create team member: %v", err)
+        }
+        fmt.Println("Created team member with ID:", testTeamMemberID)
+    } else {
+        fmt.Println("Team member already exists with ID:", testTeamMemberID)
     }
-    
-    jsonUser, _ := json.Marshal(user)
-    req, _ = http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonUser))
-    req.Header.Set("Content-Type", "application/json")
-    w = httptest.NewRecorder()
-    router.ServeHTTP(w, req)
-    
-    if w.Code != http.StatusOK {
-        t.Fatalf("Failed to create test user, status: %d", w.Code)
-    }
-    
-    var response struct {
-        ID string `json:"id"`
-    }
-    if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
-        t.Fatalf("Failed to parse response: %v", err)
-    }
-    
-    return response.ID
 }
 
-func createSecondTestUser(t *testing.T) string {
-    user := models.User{
-        Username: fmt.Sprintf("testuser2-%s", uuid.New().String()[:8]),
-        Password: "testpassword",
-    }
-    
-    jsonUser, _ := json.Marshal(user)
-    req, _ := http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonUser))
-    req.Header.Set("Content-Type", "application/json")
-    w := httptest.NewRecorder()
-    router.ServeHTTP(w, req)
-    
-    if w.Code != http.StatusOK {
-        t.Fatalf("Handler returned wrong status code: got %v want %v, response: %v", 
-            w.Code, http.StatusOK, w.Body.String())
-    }
-    
-    var response struct {
-        ID string `json:"id"`
-    }
-    if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
-        t.Fatalf("Failed to parse response: %v", err)
-    }
-    
-    t.Logf("Created second test user with ID: %s", response.ID)
-    return response.ID
-}
-
-func createTestTeam(t *testing.T, userID string) string {
-    t.Log("Test team doesn't exist, creating new team")
-    
-    team := models.Team{
-        Name:        "Test Team",
-        Password:    "testpassword",
-        AdminID:     userID,
-    }
-    
-    jsonTeam, _ := json.Marshal(team)
-    req, _ := http.NewRequest("POST", "/api/team", bytes.NewBuffer(jsonTeam))
-    req.Header.Set("Content-Type", "application/json")
-    
-    // Add auth context
-    ctx := req.Context()
-    ctx = context.WithValue(ctx, "userID", userID)
-    req = req.WithContext(ctx)
-    
-    w := httptest.NewRecorder()
-    router.ServeHTTP(w, req)
-    
-    if w.Code != http.StatusOK {
-        t.Fatalf("Failed to create team: status %d, response: %s", w.Code, w.Body.String())
-    }
-    
-    var response struct {
-        ID string `json:"id"`
-    }
-    if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
-        t.Fatalf("Failed to parse team creation response: %v", err)
-    }
-    
-    if response.ID == "" {
-        t.Fatalf("Team created but no ID returned")
-    }
-    
-    t.Logf("Created test team with ID: %s", response.ID)
-    return response.ID
-}
-
-func TestGetTeamMembers(t *testing.T) {
-    fmt.Println("=== RUN   TestGetTeamMembers")
-    
-    // Create test user
-    userID := createTestUser(t)
-    
-    // Create test team
-    teamID := createTestTeam(t, userID)
-    
-    // Send request to get team members
-    req, _ := http.NewRequest("GET", fmt.Sprintf("/api/team/%s/members", teamID), nil)
-    
-    // Add auth context
-    ctx := req.Context()
-    ctx = context.WithValue(ctx, "userID", userID)
-    req = req.WithContext(ctx)
-    
-    w := httptest.NewRecorder()
-    router.ServeHTTP(w, req)
-    
-    // Check response
-    if w.Code != http.StatusOK {
-        t.Fatalf("Handler returned wrong status code: got %v want 200", w.Code)
-    }
-    
-    // Parse response
-    var members []models.TeamMemberDetails
-    if err := json.Unmarshal(w.Body.Bytes(), &members); err != nil {
-        t.Fatalf("Failed to parse response: %v", err)
-    }
-    
-    // The team creator (admin) should be a member by default
-    if len(members) < 1 {
-        t.Fatalf("Expected at least one team member, got none")
-    }
-    
-    // Check if the admin is in the members list
-    adminFound := false
-    for _, member := range members {
-        if member.ID == userID && member.IsAdmin {
-            adminFound = true
-            break
+// Helper function to cleanup team member test data
+func cleanupTeamMemberTestData() {
+    // Delete team members
+    if testTeamMemberTeamID != "" {
+        _, err := database.DB.Exec("DELETE FROM team_members WHERE team_id = ?", testTeamMemberTeamID)
+        if err != nil {
+            fmt.Println("Error cleaning up team members:", err)
+        } else {
+            fmt.Println("Team members cleaned up")
+        }
+        
+        // Delete the team
+        _, err = database.DB.Exec("DELETE FROM teams WHERE id = ?", testTeamMemberTeamID)
+        if err != nil {
+            fmt.Println("Error cleaning up team:", err)
+        } else {
+            fmt.Println("Team cleaned up")
         }
     }
     
-    if !adminFound {
-        t.Fatalf("Admin not found in team members list")
+    // Delete test users
+    _, err := database.DB.Exec("DELETE FROM users WHERE id IN (?, ?)", testTeamOwnerID, testTeamMemberID)
+    if err != nil {
+        fmt.Println("Error cleaning up test users:", err)
+    } else {
+        fmt.Println("Test users cleaned up")
     }
     
-    t.Log("TestGetTeamMembers passed")
+    testTeamMemberTeamID = "" // Reset the team ID
 }
 
+// Helper function to create a test team
+func createTestTeamForMemberTests(t *testing.T) string {
+    // Check if we already have a team ID
+    if testTeamMemberTeamID != "" {
+        var count int
+        err := database.DB.QueryRow("SELECT COUNT(*) FROM teams WHERE id = ?", testTeamMemberTeamID).Scan(&count)
+        if err == nil && count > 0 {
+            fmt.Println("Using existing test team with ID:", testTeamMemberTeamID)
+            return testTeamMemberTeamID
+        }
+    }
+    
+    // Ensure owner user exists
+    ensureTeamOwnerExists(t)
+    
+    // Create a new team directly using the model function
+    name := fmt.Sprintf("Team Member Test Team %s", uuid.New().String()[:8])
+    password := "testteampassword"
+    
+    team, err := models.CreateTeam(name, password, testTeamOwnerID)
+    if err != nil {
+        t.Fatalf("Failed to create team for member tests: %v", err)
+    }
+    
+    fmt.Printf("Created team with ID: %s for member tests\n", team.ID)
+    testTeamMemberTeamID = team.ID
+    return team.ID
+}
+
+// TestAddTeamMember tests the AddTeamMember function directly
 func TestAddTeamMember(t *testing.T) {
-    fmt.Println("=== RUN   TestAddTeamMember")
+    fmt.Println("\nRUNNING TEST: TestAddTeamMember")
+    fmt.Println("Testing adding a member to a team")
     
-    // Create test user (admin)
-    userID := createTestUser(t)
+    // Clean up before test to ensure fresh state
+    cleanupTeamMemberTestData()
     
-    // Create test team
-    teamID := createTestTeam(t, userID)
+    // Create a test team and ensure member user exists
+    teamID := createTestTeamForMemberTests(t)
+    ensureTeamMemberExists(t)
     
-    // Create second test user to add as a member
-    secondUserID := createSecondTestUser(t)
-    
-    // Prepare request body
-    teamMember := struct {
-        UserID  string `json:"user_id"`
-        IsAdmin bool   `json:"is_admin"`
-    }{
-        UserID:  secondUserID,
-        IsAdmin: false,
+    // Add the member to the team directly using the model function
+    err := models.AddTeamMember(teamID, testTeamMemberUsername, testTeamOwnerID)
+    if err != nil {
+        t.Fatalf("Failed to add team member: %v", err)
     }
     
-    jsonMember, _ := json.Marshal(teamMember)
-    req, _ := http.NewRequest("POST", fmt.Sprintf("/api/team/%s/member", teamID), bytes.NewBuffer(jsonMember))
-    req.Header.Set("Content-Type", "application/json")
+    // Verify the member was added by checking the database
+    var count int
+    err = database.DB.QueryRow(
+        "SELECT COUNT(*) FROM team_members WHERE team_id = ? AND user_id = ?", 
+        teamID, testTeamMemberID,
+    ).Scan(&count)
     
-    // Add auth context
-    ctx := req.Context()
-    ctx = context.WithValue(ctx, "userID", userID) // Admin user
-    req = req.WithContext(ctx)
-    
-    w := httptest.NewRecorder()
-    router.ServeHTTP(w, req)
-    
-    // Check response
-    if w.Code != http.StatusOK {
-        t.Fatalf("Handler returned wrong status code: got %d want 200. Body: %s", 
-            w.Code, w.Body.String())
+    if err != nil {
+        t.Fatalf("Failed to check if team member was added: %v", err)
     }
     
-    // Verify the member was added by getting team members
-    req, _ = http.NewRequest("GET", fmt.Sprintf("/api/team/%s/members", teamID), nil)
-    ctx = req.Context()
-    ctx = context.WithValue(ctx, "userID", userID)
-    req = req.WithContext(ctx)
-    
-    w = httptest.NewRecorder()
-    router.ServeHTTP(w, req)
-    
-    if w.Code != http.StatusOK {
-        t.Fatalf("Failed to get team members: %d", w.Code)
+    if count != 1 {
+        t.Errorf("Expected team member to be added, but it wasn't found in the database")
+    } else {
+        fmt.Println("Team member was successfully added to the database")
     }
     
-    var members []models.TeamMemberDetails
-    if err := json.Unmarshal(w.Body.Bytes(), &members); err != nil {
-        t.Fatalf("Failed to parse response: %v", err)
-    }
-    
-    // Check if the new member is in the list
-    memberFound := false
-    for _, member := range members {
-        if member.ID == secondUserID {
-            memberFound = true
-            break
-        }
-    }
-    
-    if !memberFound {
-        t.Fatalf("Added member not found in team members list")
-    }
-    
-    t.Log("TestAddTeamMember passed")
+    fmt.Println("AddTeamMember test passed")
 }
 
-func TestRemoveTeamMember(t *testing.T) {
-    fmt.Println("=== RUN   TestRemoveTeamMember")
+// TestGetTeamMembers tests the GetTeamMembers function directly
+func TestGetTeamMembers(t *testing.T) {
+    fmt.Println("\nRUNNING TEST: TestGetTeamMembers")
+    fmt.Println("Testing getting all members of a team")
     
-    // Create test user (admin)
-    userID := createTestUser(t)
-    
-    // Create test team
-    teamID := createTestTeam(t, userID)
-    
-    // Create second test user to add and then remove
-    secondUserID := createSecondTestUser(t)
-    
-    // Add the second user as a member first
-    teamMember := struct {
-        UserID  string `json:"user_id"`
-        IsAdmin bool   `json:"is_admin"`
-    }{
-        UserID:  secondUserID,
-        IsAdmin: false,
-    }
-    
-    jsonMember, _ := json.Marshal(teamMember)
-    req, _ := http.NewRequest("POST", fmt.Sprintf("/api/team/%s/member", teamID), bytes.NewBuffer(jsonMember))
-    req.Header.Set("Content-Type", "application/json")
-    
-    // Add auth context
-    ctx := req.Context()
-    ctx = context.WithValue(ctx, "userID", userID) // Admin user
-    req = req.WithContext(ctx)
-    
-    w := httptest.NewRecorder()
-    router.ServeHTTP(w, req)
-    
-    if w.Code != http.StatusOK {
-        t.Fatalf("Failed to add member: %d, %s", w.Code, w.Body.String())
-    }
-    
-    // Now remove the member
-    req, _ = http.NewRequest("DELETE", fmt.Sprintf("/api/team/%s/member/%s", teamID, secondUserID), nil)
-    ctx = req.Context()
-    ctx = context.WithValue(ctx, "userID", userID) // Admin user
-    req = req.WithContext(ctx)
-    
-    w = httptest.NewRecorder()
-    router.ServeHTTP(w, req)
-    
-    // Check response
-    if w.Code != http.StatusOK {
-        t.Fatalf("Handler returned wrong status code: got %d want 200, response: %s", 
-            w.Code, w.Body.String())
-    }
-    
-    // Verify the member was removed by getting team members
-    req, _ = http.NewRequest("GET", fmt.Sprintf("/api/team/%s/members", teamID), nil)
-    ctx = req.Context()
-    ctx = context.WithValue(ctx, "userID", userID)
-    req = req.WithContext(ctx)
-    
-    w = httptest.NewRecorder()
-    router.ServeHTTP(w, req)
-    
-    var members []models.TeamMemberDetails
-    if err := json.Unmarshal(w.Body.Bytes(), &members); err != nil {
-        t.Fatalf("Failed to parse response: %v", err)
-    }
-    
-    // Check that the removed member is not in the list
-    for _, member := range members {
-        if member.ID == secondUserID {
-            t.Fatalf("Removed member still found in team members list")
+    // First add a team member to ensure there's data to retrieve
+    if testTeamMemberTeamID == "" {
+        TestAddTeamMember(t)
+        if testTeamMemberTeamID == "" {
+            t.Fatal("Failed to create a team for team member retrieval test")
         }
     }
     
-    t.Log("TestRemoveTeamMember passed")
+    // Get team members
+    members, err := models.GetTeamMembers(testTeamMemberTeamID)
+    if err != nil {
+        t.Fatalf("Failed to get team members: %v", err)
+    }
+    
+    // Verify we got at least two members (the owner and our added member)
+    if len(members) < 2 {
+        t.Errorf("Expected at least 2 team members, got %d", len(members))
+    } else {
+        fmt.Printf("Retrieved %d team members\n", len(members))
+        
+        // Find our added member
+        foundMember := false
+        foundOwner := false
+        
+        for _, member := range members {
+            if member.ID == testTeamMemberID {
+                foundMember = true
+                if member.IsAdmin {
+                    t.Errorf("Expected team member to not be admin, but it is")
+                }
+            } else if member.ID == testTeamOwnerID {
+                foundOwner = true
+                if !member.IsAdmin {
+                    t.Errorf("Expected team owner to be admin, but it's not")
+                }
+            }
+        }
+        
+        if !foundMember {
+            t.Errorf("Added team member not found in retrieved members")
+        }
+        
+        if !foundOwner {
+            t.Errorf("Team owner not found in retrieved members")
+        }
+    }
+    
+    fmt.Println("GetTeamMembers test passed")
 }
+
+// TestRemoveTeamMember tests the RemoveTeamMember function directly
+func TestRemoveTeamMember(t *testing.T) {
+    fmt.Println("\nRUNNING TEST: TestRemoveTeamMember")
+    fmt.Println("Testing removing a member from a team")
+    
+    // First add a team member to ensure there's data to remove
+    if testTeamMemberTeamID == "" {
+        TestAddTeamMember(t)
+        if testTeamMemberTeamID == "" {
+            t.Fatal("Failed to create a team for team member removal test")
+        }
+    }
+    
+    // Remove the team member directly using the model function
+    err := models.RemoveTeamMember(testTeamMemberTeamID, testTeamMemberID)
+    if err != nil {
+        t.Fatalf("Failed to remove team member: %v", err)
+    }
+    
+    // Verify the member was removed by checking the database
+    var count int
+    err = database.DB.QueryRow(
+        "SELECT COUNT(*) FROM team_members WHERE team_id = ? AND user_id = ?", 
+        testTeamMemberTeamID, testTeamMemberID,
+    ).Scan(&count)
+    
+    if err != nil {
+        t.Fatalf("Failed to check if team member was removed: %v", err)
+    }
+    
+    if count != 0 {
+        t.Errorf("Expected team member to be removed, but it's still in the database")
+    } else {
+        fmt.Println("Team member was successfully removed from the database")
+    }
+    
+    fmt.Println("RemoveTeamMember test passed")
+    
+    // Clean up after all team member tests
+    cleanupTeamMemberTestData()
+}
+

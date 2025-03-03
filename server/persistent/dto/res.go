@@ -92,6 +92,22 @@ type SuccessResponse struct {
     Message string `json:"message,omitempty"`
 }
 
+// Routine Responses
+type RoutineResponse struct {
+    ID           string    `json:"id"`
+    Day          string    `json:"day"`
+    ScheduleType string    `json:"schedule_type"`
+    TaskID       string    `json:"task_id"`
+    UserID       string    `json:"user_id"`
+    CreatedAt    time.Time `json:"created_at"`
+    UpdatedAt    time.Time `json:"updated_at"`
+    IsActive     bool      `json:"is_active"`
+}
+
+type RoutinesResponse struct {
+    Routines []RoutineResponse `json:"routines"`
+}
+
 type CreateResponse struct {
     ID string `json:"id"`
 }
@@ -201,4 +217,26 @@ func NewUserResponse(user *db.User) *UserResponse {
         Username: user.Username,
         Password: user.Password,
     }
+}
+
+// Add this to the Converters section
+func NewRoutineResponse(routine *db.Routine) *RoutineResponse {
+    return &RoutineResponse{
+        ID:           routine.ID,
+        Day:          string(routine.Day),
+        ScheduleType: string(routine.Scheduletype),
+        TaskID:       routine.Taskid,
+        UserID:       routine.Userid,
+        CreatedAt:    routine.Createdat,
+        UpdatedAt:    routine.Updatedat,
+        IsActive:     routine.Isactive.Bool,
+    }
+}
+
+func NewRoutinesResponse(routines []db.Routine) *RoutinesResponse {
+    var response RoutinesResponse
+    for _, routine := range routines {
+        response.Routines = append(response.Routines, *NewRoutineResponse(&routine))
+    }
+    return &response
 }

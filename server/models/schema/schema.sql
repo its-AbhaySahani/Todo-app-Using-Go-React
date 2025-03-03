@@ -65,3 +65,17 @@ CREATE TABLE team_todos (
   FOREIGN KEY (team_id) REFERENCES teams(id),
   FOREIGN KEY (assigned_to) REFERENCES users(id)
 );
+
+CREATE TABLE routines (
+  id varchar(36) NOT NULL,
+  day ENUM('sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday') NOT NULL,
+  scheduleType ENUM('morning', 'noon', 'evening', 'night') NOT NULL,
+  taskId varchar(36) NOT NULL,
+  userId varchar(36) NOT NULL,
+  createdAt DATE NOT NULL,
+  updatedAt DATE NOT NULL,
+  isActive BOOLEAN DEFAULT TRUE,
+  PRIMARY KEY (id),
+  FOREIGN KEY (taskId) REFERENCES todos(id) ON DELETE CASCADE,
+  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);

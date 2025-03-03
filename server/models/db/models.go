@@ -6,7 +6,112 @@ package db
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"fmt"
+	"time"
 )
+
+type RoutinesDay string
+
+const (
+	RoutinesDaySunday    RoutinesDay = "sunday"
+	RoutinesDayMonday    RoutinesDay = "monday"
+	RoutinesDayTuesday   RoutinesDay = "tuesday"
+	RoutinesDayWednesday RoutinesDay = "wednesday"
+	RoutinesDayThursday  RoutinesDay = "thursday"
+	RoutinesDayFriday    RoutinesDay = "friday"
+	RoutinesDaySaturday  RoutinesDay = "saturday"
+)
+
+func (e *RoutinesDay) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = RoutinesDay(s)
+	case string:
+		*e = RoutinesDay(s)
+	default:
+		return fmt.Errorf("unsupported scan type for RoutinesDay: %T", src)
+	}
+	return nil
+}
+
+type NullRoutinesDay struct {
+	RoutinesDay RoutinesDay
+	Valid       bool // Valid is true if RoutinesDay is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullRoutinesDay) Scan(value interface{}) error {
+	if value == nil {
+		ns.RoutinesDay, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.RoutinesDay.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullRoutinesDay) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.RoutinesDay), nil
+}
+
+type RoutinesScheduletype string
+
+const (
+	RoutinesScheduletypeMorning RoutinesScheduletype = "morning"
+	RoutinesScheduletypeNoon    RoutinesScheduletype = "noon"
+	RoutinesScheduletypeEvening RoutinesScheduletype = "evening"
+	RoutinesScheduletypeNight   RoutinesScheduletype = "night"
+)
+
+func (e *RoutinesScheduletype) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = RoutinesScheduletype(s)
+	case string:
+		*e = RoutinesScheduletype(s)
+	default:
+		return fmt.Errorf("unsupported scan type for RoutinesScheduletype: %T", src)
+	}
+	return nil
+}
+
+type NullRoutinesScheduletype struct {
+	RoutinesScheduletype RoutinesScheduletype
+	Valid                bool // Valid is true if RoutinesScheduletype is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullRoutinesScheduletype) Scan(value interface{}) error {
+	if value == nil {
+		ns.RoutinesScheduletype, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.RoutinesScheduletype.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullRoutinesScheduletype) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.RoutinesScheduletype), nil
+}
+
+type Routine struct {
+	ID           string
+	Day          RoutinesDay
+	Scheduletype RoutinesScheduletype
+	Taskid       string
+	Userid       string
+	Createdat    time.Time
+	Updatedat    time.Time
+	Isactive     sql.NullBool
+}
 
 type SharedTodo struct {
 	ID          string

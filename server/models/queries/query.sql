@@ -112,6 +112,12 @@ SELECT id, name, password, admin_id
 FROM teams
 WHERE id = ? /* sqlc.arg(teamID) */;
 
+-- name: GetTeams :many
+SELECT t.id, t.name, t.password, t.admin_id
+FROM teams t
+JOIN team_members tm ON t.id = tm.team_id
+WHERE tm.user_id = ? /* sqlc.arg(userID) */;
+
 -- Team Members Queries
 
 -- name: AddTeamMember :exec
@@ -126,6 +132,12 @@ VALUES (
 SELECT team_id, user_id, is_admin
 FROM team_members
 WHERE team_id = ? /* sqlc.arg(teamID) */;
+
+-- name: GetTeamMemberDetails :many
+SELECT u.id, u.username, tm.is_admin
+FROM users u
+JOIN team_members tm ON u.id = tm.user_id
+WHERE tm.team_id = ? /* sqlc.arg(teamID) */;
 
 -- name: RemoveTeamMember :exec
 DELETE FROM team_members
@@ -174,3 +186,48 @@ SELECT
   false
 FROM teams
 WHERE name = ? /* sqlc.arg(teamName) */ AND password = ? /* sqlc.arg(teamPassword) */;
+
+-- Routines Queries (new additions for the routines functionality)
+
+-- name: CreateRoutine :exec
+INSERT INTO routines (id, day, scheduleType, taskId, userId, createdAt, updatedAt, isActive)
+VALUES (
+  ? /* sqlc.arg(id) */,
+  ? /* sqlc.arg(day) */,
+  ? /* sqlc.arg(scheduleType) */,
+  ? /* sqlc.arg(taskId) */,
+  ? /* sqlc.arg(userId) */,
+  ? /* sqlc.arg(createdAt) */,
+  ? /* sqlc.arg(updatedAt) */,
+  ? /* sqlc.arg(isActive) */
+);
+
+-- name: UpdateRoutineStatus :exec
+UPDATE routines
+SET isActive = ? /* sqlc.arg(isActive) */,
+    updatedAt = ? /* sqlc.arg(updatedAt) */
+WHERE id = ? /* sqlc.arg(id) */;
+
+-- name: UpdateRoutineDay :exec
+UPDATE routines
+SET day = ? /* sqlc.arg(day) */,
+    updatedAt = ? /* sqlc.arg(updatedAt) */
+WHERE id = ? /* sqlc.arg(id) */;
+
+-- name: GetRoutinesByTaskID :many
+SELECT id, day, scheduleType, taskId, userId, createdAt, updatedAt, isActive
+FROM routines
+WHERE taskId = ? /* sqlc.arg(taskId) */;
+
+-- name: GetDailyRoutines :many
+SELECT t.id, t.task, t.description, t.done, t.important, t.user_id, t.date, t.time
+FROM todos t
+JOIN routines r ON t.id = r.taskId
+WHERE r.day = ? /* sqlc.arg(day) */ 
+  AND r.scheduleType = ? /* sqlc.arg(scheduleType) */ 
+  AND r.userId = ? /* sqlc.arg(userId) */ 
+  AND r.isActive = true;
+
+-- name: DeleteRoutinesByTaskID :exec
+DELETE FROM routines
+WHERE taskId = ? /* sqlc.arg(taskId) */;

@@ -1,357 +1,423 @@
 package TestCases
 
 import (
-    "bytes"
-    "encoding/json"
     "fmt"
-    "net/http"
-    "net/http/httptest"
     "testing"
-    "time"
-    "context"
 
-    "github.com/gorilla/mux"
+    "github.com/google/uuid"
+    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/Database"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/OLDmodels"
-    "github.com/its-AbhaySahani/Todo-app-Using-Go-React/middleware"
 )
 
 // Constants for team todo tests
-var testTeamTodoTask = "Test Team Todo"
-var testTeamTodoDescription = "This is a test team todo"
-var testTeamUserID = "todo-test-user-id" // Using the same ID as in other tests
-var routerForTest *mux.Router
+const testTeamTodoUserID = "team-todo-test-user-id"
+const testTeamTodoUsername = "team_todo_testuser"
+var testTeamTodoID string // Will be populated when we create a test team todo
+var testTeamForTodoID string // Will be populated when we create a test team
 
-func init() {
-    // Initialize router similar to team_member_test.go
-    routerForTest = mux.NewRouter()
-    // Set up routes or use router.Router() if needed
+// Helper function to ensure the test user exists
+func ensureTeamTodoTestUserExists(t *testing.T) {
+    // Check if the user already exists
+    var count int
+    err := database.DB.QueryRow("SELECT COUNT(*) FROM users WHERE id = ?", testTeamTodoUserID).Scan(&count)
+    if err != nil {
+        t.Fatalf("Failed to check if team todo test user exists: %v", err)
+    }
+
+    if count == 0 {
+        // Create the test user if it doesn't exist
+        _, err := database.DB.Exec(
+            "INSERT INTO users (id, username, password) VALUES (?, ?, ?)",
+            testTeamTodoUserID, testTeamTodoUsername, "$2a$10$TestHashedPasswordForTeamTodoTestUser",
+        )
+        if err != nil {
+            t.Fatalf("Failed to create team todo test user: %v", err)
+        }
+        fmt.Println("Created team todo test user with ID:", testTeamTodoUserID)
+    } else {
+        fmt.Println("Team todo test user already exists with ID:", testTeamTodoUserID)
+    }
 }
 
-// Helper function to set user context (similar to what's in middleware.SetUserContext)
-func setUserContext(ctx context.Context, userID string) context.Context {
-    return context.WithValue(ctx, middleware.UserIDKey, userID)
+// Helper function to ensure test team exists
+func ensureTestTeamForTodoExists(t *testing.T) string {
+    // If we already have a team ID, check if it still exists
+    if testTeamForTodoID != "" {
+        var count int
+        err := database.DB.QueryRow("SELECT COUNT(*) FROM teams WHERE id = ?", testTeamForTodoID).Scan(&count)
+        if err == nil && count > 0 {
+            fmt.Println("Using existing team with ID:", testTeamForTodoID)
+            return testTeamForTodoID
+        }
+    }
+    
+    // Create a new team
+    teamID := uuid.New().String()
+    teamName := fmt.Sprintf("Test Team %s", uuid.New().String()[:8])
+    teamPassword := "testteampassword"
+    
+    // Make sure the test user exists
+    ensureTeamTodoTestUserExists(t)
+    
+    _, err := database.DB.Exec(
+        "INSERT INTO teams (id, name, password, admin_id) VALUES (?, ?, ?, ?)",
+        teamID, teamName, teamPassword, testTeamTodoUserID,
+    )
+    
+    if err != nil {
+        t.Fatalf("Failed to create test team: %v", err)
+    }
+    
+    // Add the user as a team member with admin privileges
+    _, err = database.DB.Exec(
+        "INSERT INTO team_members (team_id, user_id, is_admin) VALUES (?, ?, ?)",
+        teamID, testTeamTodoUserID, true,
+    )
+    
+    if err != nil {
+        t.Fatalf("Failed to add user as team member: %v", err)
+    }
+    
+    fmt.Println("Created test team with ID:", teamID)
+    testTeamForTodoID = teamID
+    return teamID
 }
 
-// ensureTestTeamExists creates a test team and returns its ID
-func ensureTestTeamExists(t *testing.T) string {
-    // First try to get existing teams for this user
-    req, _ := http.NewRequest("GET", "/api/teams", nil)
-    req = req.WithContext(setUserContext(req.Context(), testTeamUserID))
-    
-    respRec := httptest.NewRecorder()
-    routerForTest.ServeHTTP(respRec, req)
-    
-    if respRec.Code == http.StatusOK {
-        var response struct {
-            Teams []models.Team `json:"teams"`
+// Helper function to cleanup team test data after tests
+func cleanupTeamTodoTestData() {
+    // Delete team todos
+    if testTeamForTodoID != "" {
+        _, err := database.DB.Exec("DELETE FROM team_todos WHERE team_id = ?", testTeamForTodoID)
+        if err != nil {
+            fmt.Println("Error cleaning up team todos:", err)
+        } else {
+            fmt.Println("Team todos cleaned up")
         }
         
-        if err := json.Unmarshal(respRec.Body.Bytes(), &response); err == nil {
-            if len(response.Teams) > 0 {
-                t.Logf("Using existing team with ID: %s", response.Teams[0].ID)
-                return response.Teams[0].ID
+        // Delete team members
+        _, err = database.DB.Exec("DELETE FROM team_members WHERE team_id = ?", testTeamForTodoID)
+        if err != nil {
+            fmt.Println("Error cleaning up team members:", err)
+        } else {
+            fmt.Println("Team members cleaned up")
+        }
+        
+        // Delete the team
+        _, err = database.DB.Exec("DELETE FROM teams WHERE id = ?", testTeamForTodoID)
+        if err != nil {
+            fmt.Println("Error cleaning up team:", err)
+        } else {
+            fmt.Println("Team cleaned up")
+        }
+    }
+    
+    // Delete test user
+    _, err := database.DB.Exec("DELETE FROM users WHERE id = ?", testTeamTodoUserID)
+    if err != nil {
+        fmt.Println("Error cleaning up team test user:", err)
+    } else {
+        fmt.Println("Team test user cleaned up")
+    }
+    
+    testTeamForTodoID = "" // Reset the team ID
+    testTeamTodoID = ""    // Reset the team todo ID
+}
+
+// TestCreateTeamTodo tests the CreateTeamTodo function directly
+func TestCreateTeamTodo(t *testing.T) {
+    fmt.Println("\nRUNNING TEST: TestCreateTeamTodo")
+    fmt.Println("Testing creating a new team todo")
+    
+    // Clean up before test to ensure fresh state
+    cleanupTeamTodoTestData()
+    
+    // Ensure test team exists
+    teamID := ensureTestTeamForTodoExists(t)
+    
+    // Create a new team todo directly using the model function
+    task := "Team Functional Test Task"
+    description := "Team Functional Test Description"
+    important := true
+    assignedTo := testTeamTodoUserID
+    
+    teamTodo, err := models.CreateTeamTodo(task, description, important, teamID, assignedTo)
+    if err != nil {
+        t.Fatalf("Failed to create team todo: %v", err)
+    }
+    
+    // Verify the team todo was created with the correct data
+    if teamTodo.ID == "" {
+        t.Errorf("Team todo was created but ID is empty")
+    } else {
+        fmt.Printf("Created team todo with ID: %s\n", teamTodo.ID)
+    }
+    
+    if teamTodo.Task != task {
+        t.Errorf("Expected task '%s', got '%s'", task, teamTodo.Task)
+    }
+    
+    if teamTodo.Description != description {
+        t.Errorf("Expected description '%s', got '%s'", description, teamTodo.Description)
+    }
+    
+    if !teamTodo.Important {
+        t.Errorf("Expected team todo to be important, but it's not")
+    }
+    
+    if teamTodo.Done {
+        t.Errorf("Expected team todo to not be done, but it is")
+    }
+    
+    if teamTodo.TeamID != teamID {
+        t.Errorf("Expected team ID '%s', got '%s'", teamID, teamTodo.TeamID)
+    }
+    
+    if teamTodo.AssignedTo != assignedTo {
+        t.Errorf("Expected assigned to '%s', got '%s'", assignedTo, teamTodo.AssignedTo)
+    }
+    
+    // Verify the team todo exists in the database
+    var dbTask, dbDescription, dbTeamID, dbAssignedTo string
+    var dbDone, dbImportant bool
+    
+    err = database.DB.QueryRow(
+        "SELECT task, description, done, important, team_id, assigned_to FROM team_todos WHERE id = ?", 
+        teamTodo.ID,
+    ).Scan(&dbTask, &dbDescription, &dbDone, &dbImportant, &dbTeamID, &dbAssignedTo)
+    
+    if err != nil {
+        t.Fatalf("Failed to retrieve team todo from database: %v", err)
+    }
+    
+    if dbTask != task {
+        t.Errorf("Database task '%s' doesn't match expected task '%s'", dbTask, task)
+    }
+    
+    if dbDescription != description {
+        t.Errorf("Database description '%s' doesn't match expected description '%s'", dbDescription, description)
+    }
+    
+    if !dbImportant {
+        t.Errorf("Expected team todo to be important in database, but it's not")
+    }
+    
+    if dbDone {
+        t.Errorf("Expected team todo to not be done in database, but it is")
+    }
+    
+    if dbTeamID != teamID {
+        t.Errorf("Expected team ID '%s' in database, got '%s'", teamID, dbTeamID)
+    }
+    
+    if dbAssignedTo != assignedTo {
+        t.Errorf("Expected assigned to '%s' in database, got '%s'", assignedTo, dbAssignedTo)
+    }
+    
+    // Save ID for later tests
+    testTeamTodoID = teamTodo.ID
+    
+    fmt.Println("CreateTeamTodo test passed")
+}
+
+// TestGetTeamTodos tests the GetTeamTodos function directly
+func TestGetTeamTodos(t *testing.T) {
+    fmt.Println("\nRUNNING TEST: TestGetTeamTodos")
+    fmt.Println("Testing getting todos for the team")
+    
+    // Ensure test team exists
+    teamID := ensureTestTeamForTodoExists(t)
+    
+    if testTeamTodoID == "" {
+        // Create a todo first if ID is not available
+        TestCreateTeamTodo(t)
+        if testTeamTodoID == "" {
+            t.Fatal("Failed to create a team todo for retrieval test")
+        }
+    }
+    
+    // Create a second team todo for testing retrieval of multiple todos
+    task2 := "Team Task 2"
+    desc2 := "Team Description 2"
+    
+    todo2, err := models.CreateTeamTodo(task2, desc2, false, teamID, testTeamTodoUserID)
+    if err != nil {
+        t.Fatalf("Failed to create second test team todo: %v", err)
+    }
+    fmt.Printf("Created second team todo with ID: %s\n", todo2.ID)
+    
+    // Now retrieve all todos for the team
+    todos, err := models.GetTeamTodos(teamID)
+    if err != nil {
+        t.Fatalf("Failed to get team todos: %v", err)
+    }
+    
+    // Verify we retrieved the correct number of todos (should be at least 2)
+    if len(todos) < 2 {
+        t.Errorf("Expected at least 2 team todos, got %d", len(todos))
+    } else {
+        fmt.Printf("Retrieved %d team todos\n", len(todos))
+    }
+    
+    // Verify we can find both todos in the results
+    found1 := false
+    found2 := false
+    
+    for _, todo := range todos {
+        if todo.ID == testTeamTodoID {
+            found1 = true
+        } else if todo.ID == todo2.ID {
+            found2 = true
+            if todo.Task != task2 {
+                t.Errorf("Expected task '%s', got '%s'", task2, todo.Task)
+            }
+            if todo.Description != desc2 {
+                t.Errorf("Expected description '%s', got '%s'", desc2, todo.Description)
+            }
+            if todo.Important {
+                t.Errorf("Expected todo to not be important, but it is")
             }
         }
     }
     
-    // Create a new team if none exists
-    team := models.Team{
-        Name:     "Test Team",
-        Password: "testpass",
-        AdminID:  testTeamUserID,
+    if !found1 {
+        t.Errorf("First team todo not found in retrieved todos")
+    }
+    if !found2 {
+        t.Errorf("Second team todo not found in retrieved todos")
     }
     
-    jsonData, err := json.Marshal(team)
-    if err != nil {
-        t.Fatalf("Failed to marshal JSON: %v", err)
-    }
-    
-    // Create request
-    req, err = http.NewRequest("POST", "/api/team", bytes.NewBuffer(jsonData))
-    if err != nil {
-        t.Fatalf("Failed to create request: %v", err)
-    }
-    req.Header.Set("Content-Type", "application/json")
-    
-    // Add user ID to context
-    req = req.WithContext(setUserContext(req.Context(), testTeamUserID))
-    
-    // Create response recorder
-    respRec = httptest.NewRecorder()
-    
-    // Serve the request
-    routerForTest.ServeHTTP(respRec, req)
-    
-    // Check response
-    if respRec.Code != http.StatusOK {
-        t.Logf("Failed to create team: %s", respRec.Body.String())
-        // Use a hardcoded team ID that matches an existing team in your database
-        return "1" // Using ID 1 as fallback (check your database for valid IDs)
-    }
-    
-    // Parse the response to get the team ID
-    var response struct {
-        ID string `json:"id"`
-    }
-    
-    if err := json.Unmarshal(respRec.Body.Bytes(), &response); err != nil {
-        t.Fatalf("Failed to parse response: %v", err)
-    }
-    
-    t.Logf("Created test team with ID: %s", response.ID)
-    return response.ID
+    fmt.Println("GetTeamTodos test passed")
 }
 
-// TestCreateTeamTodo tests the CreateTeamTodo endpoint
-func TestCreateTeamTodo(t *testing.T) {
-    fmt.Println("\nRUNNING TEST: TestCreateTeamTodo")
-    
-    // Ensure test team exists
-    teamID := ensureTestTeamExists(t)
-    
-    // Create todo data
-    todoData := map[string]interface{}{
-        "task":        testTeamTodoTask,
-        "description": testTeamTodoDescription,
-        "important":   true,
-        "assigned_to": testTeamUserID,
-    }
-    
-    jsonData, err := json.Marshal(todoData)
-    if err != nil {
-        t.Fatalf("Failed to marshal JSON: %v", err)
-    }
-    
-    // Create request
-    req, err := http.NewRequest("POST", fmt.Sprintf("/api/team/%s/todo", teamID), bytes.NewBuffer(jsonData))
-    if err != nil {
-        t.Fatalf("Failed to create request: %v", err)
-    }
-    req.Header.Set("Content-Type", "application/json")
-    
-    // Add user ID to context
-    req = req.WithContext(setUserContext(req.Context(), testTeamUserID))
-    
-    // Create response recorder
-    respRec := httptest.NewRecorder()
-    
-    // Serve the request
-    routerForTest.ServeHTTP(respRec, req)
-    
-    // Check response status
-    if respRec.Code != http.StatusOK {
-        t.Fatalf("Handler returned wrong status code: got %d want 200. Body: %s", 
-            respRec.Code, respRec.Body.String())
-    }
-    
-    // Parse the response
-    var response struct {
-        ID string `json:"id"`
-    }
-    
-    if err := json.Unmarshal(respRec.Body.Bytes(), &response); err != nil {
-        t.Fatalf("Failed to parse response: %v", err)
-    }
-    
-    // Validate created todo
-    if response.ID == "" {
-        t.Error("Expected a todo ID, got empty string")
-    } else {
-        t.Logf("Created team todo with ID: %s", response.ID)
-    }
-    
-    t.Log("TestCreateTeamTodo passed")
-}
-
-// TestGetTeamTodos tests the GetTeamTodos endpoint
-func TestGetTeamTodos(t *testing.T) {
-    fmt.Println("\nRUNNING TEST: TestGetTeamTodos")
-    
-    // Ensure test team exists
-    teamID := ensureTestTeamExists(t)
-    
-    // First, create a team todo to ensure there's something to retrieve
-    todoData := map[string]interface{}{
-        "task":        "Todo for Get Test",
-        "description": "This todo is for the get test",
-        "important":   true,
-        "assigned_to": testTeamUserID,
-    }
-    
-    jsonData, _ := json.Marshal(todoData)
-    req, _ := http.NewRequest("POST", fmt.Sprintf("/api/team/%s/todo", teamID), bytes.NewBuffer(jsonData))
-    req.Header.Set("Content-Type", "application/json")
-    req = req.WithContext(setUserContext(req.Context(), testTeamUserID))
-    
-    respRec := httptest.NewRecorder()
-    routerForTest.ServeHTTP(respRec, req)
-    
-    // Check if todo creation succeeded
-    if respRec.Code != http.StatusOK {
-        t.Logf("Warning: Failed to create team todo for get test: %s", respRec.Body.String())
-    }
-    
-    // Create request to get todos
-    req, err := http.NewRequest("GET", fmt.Sprintf("/api/team/%s/todos", teamID), nil)
-    if err != nil {
-        t.Fatalf("Failed to create request: %v", err)
-    }
-    
-    // Add user ID to context
-    req = req.WithContext(setUserContext(req.Context(), testTeamUserID))
-    
-    // Create response recorder
-    respRec = httptest.NewRecorder()
-    
-    // Serve the request
-    routerForTest.ServeHTTP(respRec, req)
-    
-    // Check response status
-    if respRec.Code != http.StatusOK {
-        t.Fatalf("Handler returned wrong status code: got %d want 200, response: %s", 
-            respRec.Code, respRec.Body.String())
-    }
-    
-    // Parse the response
-    var todos []models.TeamTodo
-    if err := json.Unmarshal(respRec.Body.Bytes(), &todos); err != nil {
-        t.Fatalf("Failed to parse response: %v", err)
-    }
-    
-    // Log todos count, but don't fail test if empty
-    t.Logf("Retrieved %d team todos", len(todos))
-    
-    t.Log("TestGetTeamTodos passed")
-}
-
-
-
-// TestUpdateTeamTodo tests the UpdateTeamTodo endpoint
+// TestUpdateTeamTodo tests the UpdateTeamTodo function directly
 func TestUpdateTeamTodo(t *testing.T) {
     fmt.Println("\nRUNNING TEST: TestUpdateTeamTodo")
+    fmt.Println("Testing updating an existing team todo")
     
     // Ensure test team exists
-    teamID := ensureTestTeamExists(t)
+    teamID := ensureTestTeamForTodoExists(t)
     
-    // Create a todo first
-    todoData := map[string]interface{}{
-        "task":        "Todo for Update Test",
-        "description": "This todo is for the update test",
-        "important":   true,
-        "assigned_to": testTeamUserID,
+    if testTeamTodoID == "" {
+        // Create a team todo first if ID is not available
+        TestCreateTeamTodo(t)
+        if testTeamTodoID == "" {
+            t.Fatal("Failed to create a team todo for update test")
+        }
     }
     
-    jsonData, _ := json.Marshal(todoData)
-    req, _ := http.NewRequest("POST", fmt.Sprintf("/api/team/%s/todo", teamID), bytes.NewBuffer(jsonData))
-    req.Header.Set("Content-Type", "application/json")
-    req = req.WithContext(setUserContext(req.Context(), testTeamUserID))
+    // Update the team todo directly using the model function
+    updatedTask := "Updated Team Task"
+    updatedDesc := "Updated Team Description"
+    updatedDone := true
+    updatedImportant := false
+    updatedAssignedTo := testTeamTodoUserID // Keep the same assigned user for simplicity
     
-    respRec := httptest.NewRecorder()
-    routerInstance := routerForTest
-    routerInstance.ServeHTTP(respRec, req)
-    
-    if respRec.Code != http.StatusOK {
-        t.Fatalf("Failed to create todo for update test: %s", respRec.Body.String())
+    updatedTodo, err := models.UpdateTeamTodo(testTeamTodoID, updatedTask, updatedDesc, updatedDone, updatedImportant, teamID, updatedAssignedTo)
+    if err != nil {
+        t.Fatalf("Failed to update team todo: %v", err)
     }
     
-    var createResponse struct {
-        ID string `json:"id"`
+    // Verify the team todo was updated with the correct data
+    if updatedTodo.ID != testTeamTodoID {
+        t.Errorf("Expected team todo ID '%s', got '%s'", testTeamTodoID, updatedTodo.ID)
     }
     
-    if err := json.Unmarshal(respRec.Body.Bytes(), &createResponse); err != nil {
-        t.Fatalf("Failed to parse create response: %v", err)
+    if updatedTodo.Task != updatedTask {
+        t.Errorf("Expected task '%s', got '%s'", updatedTask, updatedTodo.Task)
     }
     
-    todoID := createResponse.ID
-    t.Logf("Created team todo with ID: %s for update test", todoID)
-    
-    // Wait a moment to ensure the todo is fully persisted
-    time.Sleep(100 * time.Millisecond)
-    
-    // Update the todo
-    updateData := map[string]interface{}{
-        "task":        "Updated Team Todo",
-        "description": "Updated description",
-        "done":        true,
-        "important":   false,
-        "assigned_to": testTeamUserID,
+    if updatedTodo.Description != updatedDesc {
+        t.Errorf("Expected description '%s', got '%s'", updatedDesc, updatedTodo.Description)
     }
     
-    jsonData, _ = json.Marshal(updateData)
-    req, _ = http.NewRequest("PUT", fmt.Sprintf("/api/team/%s/todo/%s", teamID, todoID), bytes.NewBuffer(jsonData))
-    req.Header.Set("Content-Type", "application/json")
-    req = req.WithContext(setUserContext(req.Context(), testTeamUserID))
-    
-    respRec = httptest.NewRecorder()
-    routerInstance.ServeHTTP(respRec, req)
-    
-    // Check response status
-    if respRec.Code != http.StatusOK {
-        t.Fatalf("Handler returned wrong status code: got %d want 200. Body: %s", 
-            respRec.Code, respRec.Body.String())
+    if !updatedTodo.Done {
+        t.Errorf("Expected team todo to be done, but it's not")
     }
     
-    t.Log("TestUpdateTeamTodo passed")
+    if updatedTodo.Important {
+        t.Errorf("Expected team todo to not be important, but it is")
+    }
+    
+    // Verify the team todo was updated in the database
+    var dbTask, dbDescription, dbAssignedTo string
+    var dbDone, dbImportant bool
+    
+    err = database.DB.QueryRow(
+        "SELECT task, description, done, important, assigned_to FROM team_todos WHERE id = ? AND team_id = ?", 
+        testTeamTodoID, teamID,
+    ).Scan(&dbTask, &dbDescription, &dbDone, &dbImportant, &dbAssignedTo)
+    
+    if err != nil {
+        t.Fatalf("Failed to retrieve updated team todo from database: %v", err)
+    }
+    
+    if dbTask != updatedTask {
+        t.Errorf("Database task '%s' doesn't match expected task '%s'", dbTask, updatedTask)
+    }
+    
+    if dbDescription != updatedDesc {
+        t.Errorf("Database description '%s' doesn't match expected description '%s'", dbDescription, updatedDesc)
+    }
+    
+    if !dbDone {
+        t.Errorf("Expected team todo to be done in database, but it's not")
+    }
+    
+    if dbImportant {
+        t.Errorf("Expected team todo to not be important in database, but it is")
+    }
+    
+    if dbAssignedTo != updatedAssignedTo {
+        t.Errorf("Expected assigned to '%s' in database, got '%s'", updatedAssignedTo, dbAssignedTo)
+    }
+    
+    fmt.Println("UpdateTeamTodo test passed")
 }
 
-// TestDeleteTeamTodo tests the DeleteTeamTodo endpoint
+// TestDeleteTeamTodo tests the DeleteTeamTodo function directly
 func TestDeleteTeamTodo(t *testing.T) {
     fmt.Println("\nRUNNING TEST: TestDeleteTeamTodo")
+    fmt.Println("Testing deleting a team todo")
     
     // Ensure test team exists
-    teamID := ensureTestTeamExists(t)
+    teamID := ensureTestTeamForTodoExists(t)
     
-    // Create a todo first
-    todoData := map[string]interface{}{
-        "task":        "Todo for Delete Test",
-        "description": "This todo is for the delete test",
-        "important":   true,
-        "assigned_to": testTeamUserID,
+    if testTeamTodoID == "" {
+        // Create a team todo first if ID is not available
+        TestCreateTeamTodo(t)
+        if testTeamTodoID == "" {
+            t.Fatal("Failed to create a team todo for deletion test")
+        }
     }
     
-    jsonData, _ := json.Marshal(todoData)
-    req, _ := http.NewRequest("POST", fmt.Sprintf("/api/team/%s/todo", teamID), bytes.NewBuffer(jsonData))
-    req.Header.Set("Content-Type", "application/json")
-    req = req.WithContext(setUserContext(req.Context(), testTeamUserID))
-    
-    respRec := httptest.NewRecorder()
-    routerInstance := routerForTest
-    routerInstance.ServeHTTP(respRec, req)
-    
-    if respRec.Code != http.StatusOK {
-        t.Log("Failed to create todo for delete test, continuing with test anyway")
-        t.Log("TestDeleteTeamTodo passed")
-        return
+    // Delete the team todo directly using the model function
+    err := models.DeleteTeamTodo(testTeamTodoID, teamID)
+    if err != nil {
+        t.Fatalf("Failed to delete team todo: %v", err)
     }
     
-    var createResponse struct {
-        ID string `json:"id"`
+    // Verify the team todo was deleted from the database
+    var count int
+    err = database.DB.QueryRow(
+        "SELECT COUNT(*) FROM team_todos WHERE id = ? AND team_id = ?", 
+        testTeamTodoID, teamID,
+    ).Scan(&count)
+    
+    if err != nil {
+        t.Fatalf("Failed to check if team todo was deleted: %v", err)
     }
     
-    if err := json.Unmarshal(respRec.Body.Bytes(), &createResponse); err != nil {
-        t.Log("Failed to parse create response, continuing with test anyway")
-        t.Log("TestDeleteTeamTodo passed")
-        return
+    if count != 0 {
+        t.Errorf("Expected team todo to be deleted from database, but it still exists")
+    } else {
+        fmt.Println("Team todo was successfully deleted from database")
     }
     
-    todoID := createResponse.ID
-    t.Logf("Created team todo with ID: %s for delete test", todoID)
+    fmt.Println("DeleteTeamTodo test passed")
     
-    // Wait a moment to ensure the todo is fully persisted
-    time.Sleep(100 * time.Millisecond)
+    // Clear the teamTodoID since it's been deleted
+    testTeamTodoID = ""
     
-    // Delete the todo
-    req, _ = http.NewRequest("DELETE", fmt.Sprintf("/api/team/%s/todo/%s", teamID, todoID), nil)
-    req = req.WithContext(setUserContext(req.Context(), testTeamUserID))
-    
-    respRec = httptest.NewRecorder()
-    routerInstance.ServeHTTP(respRec, req)
-    
-    // Check response status, but don't fail test if it fails
-    if respRec.Code != http.StatusOK {
-        t.Logf("Warning: Delete handler returned status code: %d. Body: %s", 
-            respRec.Code, respRec.Body.String())
-    }
-    
-    t.Log("TestDeleteTeamTodo passed")
+    // Clean up after all team todo tests
+    cleanupTeamTodoTestData()
 }

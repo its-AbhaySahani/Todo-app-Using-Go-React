@@ -8,6 +8,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const addTeamMember = `-- name: AddTeamMember :exec
@@ -29,6 +30,47 @@ type AddTeamMemberParams struct {
 // Team Members Queries
 func (q *Queries) AddTeamMember(ctx context.Context, arg AddTeamMemberParams) error {
 	_, err := q.db.ExecContext(ctx, addTeamMember, arg.TeamID, arg.UserID, arg.IsAdmin)
+	return err
+}
+
+const createRoutine = `-- name: CreateRoutine :exec
+
+INSERT INTO routines (id, day, scheduleType, taskId, userId, createdAt, updatedAt, isActive)
+VALUES (
+  ? /* sqlc.arg(id) */,
+  ? /* sqlc.arg(day) */,
+  ? /* sqlc.arg(scheduleType) */,
+  ? /* sqlc.arg(taskId) */,
+  ? /* sqlc.arg(userId) */,
+  ? /* sqlc.arg(createdAt) */,
+  ? /* sqlc.arg(updatedAt) */,
+  ? /* sqlc.arg(isActive) */
+)
+`
+
+type CreateRoutineParams struct {
+	ID           string
+	Day          RoutinesDay
+	Scheduletype RoutinesScheduletype
+	Taskid       string
+	Userid       string
+	Createdat    time.Time
+	Updatedat    time.Time
+	Isactive     sql.NullBool
+}
+
+// Routines Queries (new additions for the routines functionality)
+func (q *Queries) CreateRoutine(ctx context.Context, arg CreateRoutineParams) error {
+	_, err := q.db.ExecContext(ctx, createRoutine,
+		arg.ID,
+		arg.Day,
+		arg.Scheduletype,
+		arg.Taskid,
+		arg.Userid,
+		arg.Createdat,
+		arg.Updatedat,
+		arg.Isactive,
+	)
 	return err
 }
 
@@ -212,6 +254,16 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 	return err
 }
 
+const deleteRoutinesByTaskID = `-- name: DeleteRoutinesByTaskID :exec
+DELETE FROM routines
+WHERE taskId = ? /* sqlc.arg(taskId) */
+`
+
+func (q *Queries) DeleteRoutinesByTaskID(ctx context.Context, taskid string) error {
+	_, err := q.db.ExecContext(ctx, deleteRoutinesByTaskID, taskid)
+	return err
+}
+
 const deleteTeamTodo = `-- name: DeleteTeamTodo :exec
 DELETE FROM team_todos
 WHERE id = ? /* sqlc.arg(id) */ AND team_id = ? /* sqlc.arg(teamID) */
@@ -240,6 +292,92 @@ type DeleteTodoParams struct {
 func (q *Queries) DeleteTodo(ctx context.Context, arg DeleteTodoParams) error {
 	_, err := q.db.ExecContext(ctx, deleteTodo, arg.ID, arg.UserID)
 	return err
+}
+
+const getDailyRoutines = `-- name: GetDailyRoutines :many
+SELECT t.id, t.task, t.description, t.done, t.important, t.user_id, t.date, t.time
+FROM todos t
+JOIN routines r ON t.id = r.taskId
+WHERE r.day = ? /* sqlc.arg(day) */ 
+  AND r.scheduleType = ? /* sqlc.arg(scheduleType) */ 
+  AND r.userId = ? /* sqlc.arg(userId) */ 
+  AND r.isActive = true
+`
+
+type GetDailyRoutinesParams struct {
+	Day          RoutinesDay
+	Scheduletype RoutinesScheduletype
+	Userid       string
+}
+
+func (q *Queries) GetDailyRoutines(ctx context.Context, arg GetDailyRoutinesParams) ([]Todo, error) {
+	rows, err := q.db.QueryContext(ctx, getDailyRoutines, arg.Day, arg.Scheduletype, arg.Userid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Todo
+	for rows.Next() {
+		var i Todo
+		if err := rows.Scan(
+			&i.ID,
+			&i.Task,
+			&i.Description,
+			&i.Done,
+			&i.Important,
+			&i.UserID,
+			&i.Date,
+			&i.Time,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRoutinesByTaskID = `-- name: GetRoutinesByTaskID :many
+SELECT id, day, scheduleType, taskId, userId, createdAt, updatedAt, isActive
+FROM routines
+WHERE taskId = ? /* sqlc.arg(taskId) */
+`
+
+func (q *Queries) GetRoutinesByTaskID(ctx context.Context, taskid string) ([]Routine, error) {
+	rows, err := q.db.QueryContext(ctx, getRoutinesByTaskID, taskid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Routine
+	for rows.Next() {
+		var i Routine
+		if err := rows.Scan(
+			&i.ID,
+			&i.Day,
+			&i.Scheduletype,
+			&i.Taskid,
+			&i.Userid,
+			&i.Createdat,
+			&i.Updatedat,
+			&i.Isactive,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getSharedByMeTodos = `-- name: GetSharedByMeTodos :many
@@ -338,6 +476,42 @@ func (q *Queries) GetTeamByID(ctx context.Context, id string) (Team, error) {
 	return i, err
 }
 
+const getTeamMemberDetails = `-- name: GetTeamMemberDetails :many
+SELECT u.id, u.username, tm.is_admin
+FROM users u
+JOIN team_members tm ON u.id = tm.user_id
+WHERE tm.team_id = ? /* sqlc.arg(teamID) */
+`
+
+type GetTeamMemberDetailsRow struct {
+	ID       string
+	Username string
+	IsAdmin  sql.NullBool
+}
+
+func (q *Queries) GetTeamMemberDetails(ctx context.Context, teamID string) ([]GetTeamMemberDetailsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTeamMemberDetails, teamID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTeamMemberDetailsRow
+	for rows.Next() {
+		var i GetTeamMemberDetailsRow
+		if err := rows.Scan(&i.ID, &i.Username, &i.IsAdmin); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTeamMembers = `-- name: GetTeamMembers :many
 SELECT team_id, user_id, is_admin
 FROM team_members
@@ -392,6 +566,41 @@ func (q *Queries) GetTeamTodos(ctx context.Context, teamID string) ([]TeamTodo, 
 			&i.AssignedTo,
 			&i.Date,
 			&i.Time,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTeams = `-- name: GetTeams :many
+SELECT t.id, t.name, t.password, t.admin_id
+FROM teams t
+JOIN team_members tm ON t.id = tm.team_id
+WHERE tm.user_id = ? /* sqlc.arg(userID) */
+`
+
+func (q *Queries) GetTeams(ctx context.Context, userID string) ([]Team, error) {
+	rows, err := q.db.QueryContext(ctx, getTeams, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Team
+	for rows.Next() {
+		var i Team
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Password,
+			&i.AdminID,
 		); err != nil {
 			return nil, err
 		}
@@ -573,6 +782,42 @@ type UndoTodoParams struct {
 
 func (q *Queries) UndoTodo(ctx context.Context, arg UndoTodoParams) error {
 	_, err := q.db.ExecContext(ctx, undoTodo, arg.ID, arg.UserID)
+	return err
+}
+
+const updateRoutineDay = `-- name: UpdateRoutineDay :exec
+UPDATE routines
+SET day = ? /* sqlc.arg(day) */,
+    updatedAt = ? /* sqlc.arg(updatedAt) */
+WHERE id = ? /* sqlc.arg(id) */
+`
+
+type UpdateRoutineDayParams struct {
+	Day       RoutinesDay
+	Updatedat time.Time
+	ID        string
+}
+
+func (q *Queries) UpdateRoutineDay(ctx context.Context, arg UpdateRoutineDayParams) error {
+	_, err := q.db.ExecContext(ctx, updateRoutineDay, arg.Day, arg.Updatedat, arg.ID)
+	return err
+}
+
+const updateRoutineStatus = `-- name: UpdateRoutineStatus :exec
+UPDATE routines
+SET isActive = ? /* sqlc.arg(isActive) */,
+    updatedAt = ? /* sqlc.arg(updatedAt) */
+WHERE id = ? /* sqlc.arg(id) */
+`
+
+type UpdateRoutineStatusParams struct {
+	Isactive  sql.NullBool
+	Updatedat time.Time
+	ID        string
+}
+
+func (q *Queries) UpdateRoutineStatus(ctx context.Context, arg UpdateRoutineStatusParams) error {
+	_, err := q.db.ExecContext(ctx, updateRoutineStatus, arg.Isactive, arg.Updatedat, arg.ID)
 	return err
 }
 

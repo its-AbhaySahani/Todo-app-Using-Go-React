@@ -1,0 +1,277 @@
+Connected to the database successfully
+🔄 Test database connected
+=== RUN   TestCreateUser
+
+RUNNING TEST: TestCreateUser
+Testing user creation with username 'testuser'
+Test data cleaned up
+Created user: {ID:f3acb6d7-82ef-49f6-9083-aa4e2921a09d Username:testuser Password:$2a$10$xxYB63KGDJzpKyag31aIVuqFBvYL0I/HnE9Em9Wj0CuwRcFDjdkY6}
+User ID verified: f3acb6d7-82ef-49f6-9083-aa4e2921a09d
+Password hash verification successful
+User creation test passed
+--- PASS: TestCreateUser (0.16s)
+=== RUN   TestGetUserByUsername
+
+RUNNING TEST: TestGetUserByUsername
+Testing retrieving a user by username
+Test data cleaned up
+Created test user with ID: d60fcaf2-6509-4a5a-b8a9-189a57a7fadc
+GetUserByUsername test passed
+Testing retrieving a non-existent user
+Correctly got error for non-existent user: sql: no rows in result set
+--- PASS: TestGetUserByUsername (0.07s)
+=== RUN   TestVerifyPassword
+
+RUNNING TEST: TestVerifyPassword
+Testing password verification
+Password verification successful for correct password
+Correctly got error for incorrect password: crypto/bcrypt: hashedPassword is not the hash of the given password
+--- PASS: TestVerifyPassword (0.18s)
+=== RUN   TestDuplicateUsername
+
+RUNNING TEST: TestDuplicateUsername
+Testing creation of user with duplicate username
+Test data cleaned up
+Correctly got error for duplicate username: Error 1062 (23000): Duplicate entry 'testuser' for key 'users.username'
+Duplicate username test passed
+--- PASS: TestDuplicateUsername (0.15s)
+=== RUN   TestTokenGeneration
+
+RUNNING TEST: TestTokenGeneration
+Testing JWT token generation and validation
+Generated token (length: 168)
+Token generation and validation test passed
+--- PASS: TestTokenGeneration (0.00s)
+=== RUN   TestCreateMultipleUsers
+
+RUNNING TEST: TestCreateMultipleUsers
+Testing creation of multiple users
+Test data cleaned up
+User IDs are different: 966dbbb4-26d8-4259-b71c-44537a8c22fb and c985439e-2da3-40f6-afe5-58b77381679a
+Multiple users creation test passed
+--- PASS: TestCreateMultipleUsers (0.14s)
+=== RUN   TestAuthMiddlewareWithValidToken
+
+RUNNING TEST: TestAuthMiddlewareWithValidToken
+Testing authentication middleware with valid token
+Sending request with valid token
+userID in context: test-user-id
+Status code verified: 200 (OK)
+Response body: protected
+Auth middleware with valid token test passed
+--- PASS: TestAuthMiddlewareWithValidToken (0.00s)
+=== RUN   TestAuthMiddlewareWithInvalidToken
+
+RUNNING TEST: TestAuthMiddlewareWithInvalidToken
+Testing authentication middleware with invalid token
+Sending request with invalid token
+Status code verified: 400 (Bad Request)
+Response body: Bad request
+
+Auth middleware with invalid token test passed
+--- PASS: TestAuthMiddlewareWithInvalidToken (0.00s)
+=== RUN   TestAuthMiddlewareWithNoToken
+
+RUNNING TEST: TestAuthMiddlewareWithNoToken
+Testing authentication middleware with no token
+Sending request with no token
+Status code verified: 401 (Unauthorized)
+Response body: Unauthorized
+
+Auth middleware with no token test passed
+--- PASS: TestAuthMiddlewareWithNoToken (0.00s)
+=== RUN   TestShareTodo
+
+RUNNING TEST: TestShareTodo
+Testing sharing a todo with another user
+Shared todos cleaned up
+Sender todos cleaned up
+Test users cleaned up
+Created sender user with ID: shared-sender-user-id
+Created recipient user with ID: shared-recipient-user-id
+Created todo with ID: 94ab36d6-aa86-486f-bedb-cc38f086601c to be shared
+ShareTodo test passed
+--- PASS: TestShareTodo (0.02s)
+=== RUN   TestGetSharedTodos
+
+RUNNING TEST: TestGetSharedTodos
+Testing retrieving shared todos for a user
+Retrieved 1 shared todos
+GetSharedTodos test passed
+--- PASS: TestGetSharedTodos (0.00s)
+=== RUN   TestGetSharedByMeTodos
+
+RUNNING TEST: TestGetSharedByMeTodos
+Testing retrieving todos shared by a user
+Retrieved 1 shared by me todos
+GetSharedByMeTodos test passed
+Shared todos cleaned up
+Sender todos cleaned up
+Test users cleaned up
+--- PASS: TestGetSharedByMeTodos (0.02s)
+=== RUN   TestAddTeamMember
+
+RUNNING TEST: TestAddTeamMember
+Testing adding a member to a team
+Test users cleaned up
+Created team owner with ID: team-member-owner-id
+Created team with ID: 1fee2cd7-526d-4969-910f-0f97b4b789a5 for member tests
+Created team member with ID: team-member-user-id
+Team member was successfully added to the database
+AddTeamMember test passed
+--- PASS: TestAddTeamMember (0.09s)
+=== RUN   TestGetTeamMembers
+
+RUNNING TEST: TestGetTeamMembers
+Testing getting all members of a team
+Retrieved 2 team members
+GetTeamMembers test passed
+--- PASS: TestGetTeamMembers (0.00s)
+=== RUN   TestRemoveTeamMember
+
+RUNNING TEST: TestRemoveTeamMember
+Testing removing a member from a team
+Team member was successfully removed from the database
+RemoveTeamMember test passed
+Team members cleaned up
+Team cleaned up
+Test users cleaned up
+--- PASS: TestRemoveTeamMember (0.03s)
+=== RUN   TestCreateTeam
+
+RUNNING TEST: TestCreateTeam
+Testing creating a new team
+Team admin cleaned up
+Created team admin with ID: team-test-admin-id
+Created team with ID: 60139038-f3bf-4348-8800-c39bdc2617f1
+CreateTeam test passed
+--- PASS: TestCreateTeam (0.14s)
+=== RUN   TestGetTeams
+
+RUNNING TEST: TestGetTeams
+Testing getting teams for a user
+Retrieved 1 teams
+GetTeams test passed
+--- PASS: TestGetTeams (0.00s)
+=== RUN   TestGetTeamByID
+
+RUNNING TEST: TestGetTeamByID
+Testing getting a team by ID
+GetTeamByID test passed
+Team members cleaned up
+Team cleaned up
+Team admin cleaned up
+--- PASS: TestGetTeamByID (0.01s)
+=== RUN   TestCreateTeamTodo
+
+RUNNING TEST: TestCreateTeamTodo
+Testing creating a new team todo
+Team test user cleaned up
+Created team todo test user with ID: team-todo-test-user-id
+Created test team with ID: 8021bffc-02ec-4786-a371-626b2ee309b3
+Created team todo with ID: 701d7fcc-5998-4a7d-a256-0460a782a9fc
+CreateTeamTodo test passed
+--- PASS: TestCreateTeamTodo (0.02s)
+=== RUN   TestGetTeamTodos
+
+RUNNING TEST: TestGetTeamTodos
+Testing getting todos for the team
+Using existing team with ID: 8021bffc-02ec-4786-a371-626b2ee309b3
+Created second team todo with ID: c0ca318f-8167-4947-807a-685685f239f6
+Retrieved 2 team todos
+GetTeamTodos test passed
+--- PASS: TestGetTeamTodos (0.01s)
+=== RUN   TestUpdateTeamTodo
+
+RUNNING TEST: TestUpdateTeamTodo
+Testing updating an existing team todo
+Using existing team with ID: 8021bffc-02ec-4786-a371-626b2ee309b3
+UpdateTeamTodo test passed
+--- PASS: TestUpdateTeamTodo (0.01s)
+=== RUN   TestDeleteTeamTodo
+
+RUNNING TEST: TestDeleteTeamTodo
+Testing deleting a team todo
+Using existing team with ID: 8021bffc-02ec-4786-a371-626b2ee309b3
+Team todo was successfully deleted from database
+DeleteTeamTodo test passed
+Team todos cleaned up
+Team members cleaned up
+Team cleaned up
+Team test user cleaned up
+--- PASS: TestDeleteTeamTodo (0.04s)
+=== RUN   TestGetTodos
+
+RUNNING TEST: TestGetTodos
+Testing getting todos for the user
+Test todos cleaned up
+Error cleaning up test user: Error 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`Todo_app`.`team_members`, CONSTRAINT `team_members_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`))
+Test user already exists with ID: todo-test-user-id
+Created first todo with ID: 820e2978-227e-46de-a294-98cc248651c7
+Created second todo with ID: 85e026b1-6129-412f-9ca2-6a9d7a2b2e1b
+Retrieved 2 todos as expected
+GetTodos test passed
+--- PASS: TestGetTodos (0.03s)
+=== RUN   TestCreateTodo
+
+RUNNING TEST: TestCreateTodo
+Testing creating a new todo
+Test user already exists with ID: todo-test-user-id
+Created todo with ID: 0b6d8a52-c088-41d5-8536-b2b6dde34344
+CreateTodo test passed
+--- PASS: TestCreateTodo (0.01s)
+=== RUN   TestUpdateTodo
+
+RUNNING TEST: TestUpdateTodo
+Testing updating an existing todo
+Test user already exists with ID: todo-test-user-id
+UpdateTodo test passed
+--- PASS: TestUpdateTodo (0.01s)
+=== RUN   TestUndoTodo
+
+RUNNING TEST: TestUndoTodo
+Testing undoing a completed todo
+Test user already exists with ID: todo-test-user-id
+Todo was successfully marked as undone in database
+UndoTodo test passed
+--- PASS: TestUndoTodo (0.01s)
+=== RUN   TestDeleteTodo
+
+RUNNING TEST: TestDeleteTodo
+Testing deleting a todo
+Test user already exists with ID: todo-test-user-id
+Todo was successfully deleted from database
+DeleteTodo test passed
+Test todos cleaned up
+Error cleaning up test user: Error 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`Todo_app`.`team_members`, CONSTRAINT `team_members_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`))
+--- PASS: TestDeleteTodo (0.02s)
+=== RUN   TestGetDailyRoutines
+
+RUNNING TEST: TestGetDailyRoutines
+Testing retrieving routines for a specific day and schedule type
+Test todos cleaned up
+Error cleaning up test user: Error 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`Todo_app`.`team_members`, CONSTRAINT `team_members_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`))
+Test user already exists with ID: todo-test-user-id
+GetDailyRoutines called with day=Monday, scheduleType=morning, userID=todo-test-user-id
+Returning 1 todos
+Retrieved 1 routine todos as expected
+Test todos cleaned up
+Error cleaning up test user: Error 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`Todo_app`.`team_members`, CONSTRAINT `team_members_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`))
+GetDailyRoutines test passed
+--- PASS: TestGetDailyRoutines (0.04s)
+=== RUN   TestUpdateRoutineDay
+
+RUNNING TEST: TestUpdateRoutineDay
+Testing updating a routine's day
+Test todos cleaned up
+Error cleaning up test user: Error 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`Todo_app`.`team_members`, CONSTRAINT `team_members_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`))
+Test user already exists with ID: todo-test-user-id
+Routine day was successfully updated in database
+Test todos cleaned up
+Error cleaning up test user: Error 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`Todo_app`.`team_members`, CONSTRAINT `team_members_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`))
+UpdateRoutineDay test passed
+--- PASS: TestUpdateRoutineDay (0.06s)
+PASS
+
+✅ ALL TESTS PASSED
+ok  	github.com/its-AbhaySahani/Todo-app-Using-Go-React/TestCases	1.295s

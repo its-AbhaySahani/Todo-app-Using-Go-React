@@ -166,3 +166,51 @@ func (req *CreateUserRequest) ConvertCreateUserDomainRequestToPersistentRequest(
 }
 
 
+// Routines
+type CreateRoutineRequest struct {
+    Day          string `json:"day"`
+    ScheduleType string `json:"scheduleType"`
+    TaskID       string `json:"taskId"`
+    UserID       string `json:"userId"`
+    IsActive     bool   `json:"isActive"`
+}
+
+func (req *CreateRoutineRequest) ConvertCreateRoutineDomainRequestToPersistentRequest() *db.CreateRoutineParams {
+    currentTime := time.Now()
+    return &db.CreateRoutineParams{
+        ID:           uuid.New().String(),
+        Day:          db.RoutinesDay(req.Day),
+        Scheduletype: db.RoutinesScheduletype(req.ScheduleType),
+        Taskid:       req.TaskID,
+        Userid:       req.UserID,
+        Createdat:    currentTime,
+        Updatedat:    currentTime,
+        Isactive:     sql.NullBool{Bool: req.IsActive, Valid: true},
+    }
+}
+
+type UpdateRoutineDayRequest struct {
+    ID  string `json:"id"`
+    Day string `json:"day"`
+}
+
+func (req *UpdateRoutineDayRequest) ConvertUpdateRoutineDayDomainRequestToPersistentRequest() *db.UpdateRoutineDayParams {
+    return &db.UpdateRoutineDayParams{
+        ID:        req.ID,
+        Day:       db.RoutinesDay(req.Day),
+        Updatedat: time.Now(),
+    }
+}
+
+type UpdateRoutineStatusRequest struct {
+    ID       string `json:"id"`
+    IsActive bool   `json:"isActive"`
+}
+
+func (req *UpdateRoutineStatusRequest) ConvertUpdateRoutineStatusDomainRequestToPersistentRequest() *db.UpdateRoutineStatusParams {
+    return &db.UpdateRoutineStatusParams{
+        ID:        req.ID,
+        Isactive:  sql.NullBool{Bool: req.IsActive, Valid: true},
+        Updatedat: time.Now(),
+    }
+}
