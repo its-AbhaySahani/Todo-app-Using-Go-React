@@ -214,3 +214,10 @@ func (req *UpdateRoutineStatusRequest) ConvertUpdateRoutineStatusDomainRequestTo
         Updatedat: time.Now(),
     }
 }
+
+type CreateOrUpdateRoutinesRequest struct {
+    TaskID    string   `json:"taskId"`
+    Schedules []string `json:"schedules"`
+    Day       string   `json:"day"`
+    UserID    string   `json:"userId"`
+}

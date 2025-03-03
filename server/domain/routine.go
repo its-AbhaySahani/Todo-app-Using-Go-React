@@ -25,4 +25,6 @@ type RoutineRepository interface {
     GetRoutinesByTaskID(ctx context.Context, taskID string) ([]Routine, error)
     GetDailyRoutines(ctx context.Context, day, scheduleType, userID string) ([]Todo, error)
     DeleteRoutinesByTaskID(ctx context.Context, taskID string) error
+    CreateOrUpdateRoutines(ctx context.Context, taskID string, schedules []string, day string, userID string) ([]Routine, error)
+
 }
