@@ -1,0 +1,412 @@
+=== RUN   TestCreateUser
+
+RUNNING TEST: TestCreateUser
+Testing user creation with mocked repository
+Created user: {ID:test-id Username:testuser Password:hashed-password}
+User ID verified: test-id
+    auth_test.go:41: PASS:	CreateUser(string,string)
+User creation test passed
+--- PASS: TestCreateUser (0.00s)
+=== RUN   TestCreateUserError
+
+RUNNING TEST: TestCreateUserError
+Testing user creation with duplicate username
+Correctly got error: username already exists
+    auth_test.go:67: PASS:	CreateUser(string,string)
+User creation error test passed
+--- PASS: TestCreateUserError (0.00s)
+=== RUN   TestGetUserByUsername
+
+RUNNING TEST: TestGetUserByUsername
+Testing retrieving a user by username
+Retrieved user: {ID:user-123 Username:existinguser}
+User retrieved successfully
+
+Testing retrieving a non-existent user
+Correctly got error for non-existent user: user not found
+    auth_test.go:113: PASS:	GetUserByUsername(string)
+    auth_test.go:113: PASS:	GetUserByUsername(string)
+GetUserByUsername test passed
+--- PASS: TestGetUserByUsername (0.00s)
+=== RUN   TestVerifyPassword
+
+RUNNING TEST: TestVerifyPassword
+Testing password verification
+Password verification successful for correct password
+Correctly got error for incorrect password: password does not match
+    auth_test.go:141: PASS:	VerifyPassword(string,string)
+    auth_test.go:141: PASS:	VerifyPassword(string,string)
+Password verification test passed
+--- PASS: TestVerifyPassword (0.00s)
+=== RUN   TestTokenGeneration
+
+RUNNING TEST: TestTokenGeneration
+Testing JWT token generation and validation
+Generated token: valid-token
+Parsed token claims: {Username:testuser, UserID:user-123}
+Testing invalid token parsing
+Correctly got error for invalid token: invalid token
+    auth_test.go:184: PASS:	GenerateJWT(string,string)
+    auth_test.go:184: PASS:	ParseJWT(string)
+    auth_test.go:184: PASS:	ParseJWT(string)
+Token generation and validation test passed
+--- PASS: TestTokenGeneration (0.00s)
+=== RUN   TestDuplicateUsername
+
+RUNNING TEST: TestDuplicateUsername
+Testing creation of user with duplicate username
+First user created successfully: {ID:user-1 Username:duplicate}
+Correctly got error for duplicate username: username already exists
+    auth_test.go:221: PASS:	CreateUser(string,string)
+    auth_test.go:221: PASS:	CreateUser(string,string)
+Duplicate username test passed
+--- PASS: TestDuplicateUsername (0.00s)
+=== RUN   TestAuthMiddleware
+
+RUNNING TEST: TestAuthMiddleware
+Testing authentication middleware
+Testing successful authentication
+Authentication middleware successfully passed the request to the handler
+Testing failed authentication
+Authentication middleware correctly blocked unauthorized request
+    middleware_test.go:72: PASS:	AuthMiddleware(string)
+    middleware_test.go:72: PASS:	AuthMiddleware(string)
+AuthMiddleware test passed
+--- PASS: TestAuthMiddleware (0.00s)
+=== RUN   TestJWTGeneration
+
+RUNNING TEST: TestJWTGeneration
+Testing JWT token generation
+Successfully generated JWT token: valid-token
+    middleware_test.go:96: PASS:	GenerateJWT(string,string)
+JWT generation test passed
+--- PASS: TestJWTGeneration (0.00s)
+=== RUN   TestJWTValidation
+
+RUNNING TEST: TestJWTValidation
+Testing JWT token validation
+Successfully validated token, extracted claims: Username=testuser, UserID=user-123
+Correctly rejected invalid token: invalid token
+    middleware_test.go:139: PASS:	ParseJWT(string)
+    middleware_test.go:139: PASS:	ParseJWT(string)
+JWT validation test passed
+--- PASS: TestJWTValidation (0.00s)
+=== RUN   TestResponseWriterMock
+
+RUNNING TEST: TestResponseWriterMock
+Testing HTTP response writer mock
+Mock response writer successfully captured status code 200 and data: Hello, World!
+    middleware_test.go:168: PASS:	WriteHeader(int)
+    middleware_test.go:168: PASS:	Write([]uint8)
+Response writer mock test passed
+--- PASS: TestResponseWriterMock (0.00s)
+=== RUN   TestGetDailyRoutines
+
+RUNNING TEST: TestGetDailyRoutines
+Testing retrieving routines for a specific day and schedule type
+Retrieved routine: {ID:todo-1 Task:Morning Routine Description:Morning routine task Important:true}
+Successfully retrieved empty routine list for day with no routines
+Correctly got error for invalid parameters: invalid day or schedule type
+    routine_test.go:73: PASS:	GetDailyRoutines(string,string,string)
+    routine_test.go:73: PASS:	GetDailyRoutines(string,string,string)
+    routine_test.go:73: PASS:	GetDailyRoutines(string,string,string)
+GetDailyRoutines test passed
+--- PASS: TestGetDailyRoutines (0.00s)
+=== RUN   TestGetTodayRoutines
+
+RUNNING TEST: TestGetTodayRoutines
+Testing retrieving routines for today
+Retrieved today's (monday) evening routine: {Task:Evening Routine Description:Evening routine task}
+Successfully retrieved empty routine list for today's morning
+    routine_test.go:125: PASS:	GetDailyRoutines(string,string,string)
+    routine_test.go:125: PASS:	GetDailyRoutines(string,string,string)
+GetTodayRoutines test passed
+--- PASS: TestGetTodayRoutines (0.00s)
+=== RUN   TestUpdateRoutineDay
+
+RUNNING TEST: TestUpdateRoutineDay
+Testing updating a routine's day
+Successfully updated routine day to 'friday'
+Correctly got error for non-existent routine: routine not found
+    routine_test.go:156: PASS:	UpdateRoutineDay(string,string)
+    routine_test.go:156: PASS:	UpdateRoutineDay(string,string)
+UpdateRoutineDay test passed
+--- PASS: TestUpdateRoutineDay (0.00s)
+=== RUN   TestUpdateRoutineStatus
+
+RUNNING TEST: TestUpdateRoutineStatus
+Testing updating a routine's status (active/inactive)
+Successfully activated routine
+Successfully deactivated routine
+Correctly got error for non-existent routine: routine not found
+    routine_test.go:191: PASS:	UpdateRoutineStatus(string,bool)
+    routine_test.go:191: PASS:	UpdateRoutineStatus(string,bool)
+    routine_test.go:191: PASS:	UpdateRoutineStatus(string,bool)
+UpdateRoutineStatus test passed
+--- PASS: TestUpdateRoutineStatus (0.00s)
+=== RUN   TestDeleteRoutinesByTaskID
+
+RUNNING TEST: TestDeleteRoutinesByTaskID
+Testing deleting all routines for a task
+Successfully deleted routines for task
+Successfully handled deletion for non-existent task (no-op)
+Correctly got error for database error: database error
+    routine_test.go:225: PASS:	DeleteRoutinesByTaskID(string)
+    routine_test.go:225: PASS:	DeleteRoutinesByTaskID(string)
+    routine_test.go:225: PASS:	DeleteRoutinesByTaskID(string)
+DeleteRoutinesByTaskID test passed
+--- PASS: TestDeleteRoutinesByTaskID (0.00s)
+=== RUN   TestCreateRoutine
+
+RUNNING TEST: TestCreateRoutine
+Testing creating a new routine
+Created routine: {ID:routine-1 Day:monday ScheduleType:morning TaskID:task-1 UserID:user-123 IsActive:true}
+Correctly got error for invalid day: invalid day
+    routine_test.go:277: PASS:	CreateRoutine(string,string,string,string)
+    routine_test.go:277: PASS:	CreateRoutine(string,string,string,string)
+CreateRoutine test passed
+--- PASS: TestCreateRoutine (0.00s)
+=== RUN   TestShareTodoWithUser
+
+RUNNING TEST: TestShareTodoWithUser
+Testing sharing a todo with another user
+Todo successfully shared with recipient user
+Correctly got error for non-existent todo: todo not found
+Correctly got error for non-existent recipient: recipient user not found
+Correctly got error for sharing with yourself: cannot share todo with yourself
+Correctly got error for already shared todo: todo is already shared with this user
+    shared_todo_test.go:67: PASS:	ShareTodoWithUser(string,string,string)
+    shared_todo_test.go:67: PASS:	ShareTodoWithUser(string,string,string)
+    shared_todo_test.go:67: PASS:	ShareTodoWithUser(string,string,string)
+    shared_todo_test.go:67: PASS:	ShareTodoWithUser(string,string,string)
+    shared_todo_test.go:67: PASS:	ShareTodoWithUser(string,string,string)
+ShareTodoWithUser test passed
+--- PASS: TestShareTodoWithUser (0.00s)
+=== RUN   TestGetSharedTodos
+
+RUNNING TEST: TestGetSharedTodos
+Testing retrieving todos shared with a user
+Retrieved 2 shared todos
+Shared Todo 1: {ID:shared-todo-1 Task:Shared Task 1 SharedBy:sender-user-1 Done:false Important:true}
+Shared Todo 2: {ID:shared-todo-2 Task:Shared Task 2 SharedBy:sender-user-2 Done:true Important:false}
+Successfully retrieved empty shared todo list for user with no shared todos
+Correctly got error: database error
+    shared_todo_test.go:145: PASS:	GetSharedTodos(string)
+    shared_todo_test.go:145: PASS:	GetSharedTodos(string)
+    shared_todo_test.go:145: PASS:	GetSharedTodos(string)
+GetSharedTodos test passed
+--- PASS: TestGetSharedTodos (0.00s)
+=== RUN   TestGetSharedByMeTodos
+
+RUNNING TEST: TestGetSharedByMeTodos
+Testing retrieving todos shared by a user
+Retrieved 2 todos shared by user
+Shared Todo 1: {ID:shared-todo-1 Task:Shared Task 1 SharedWith:recipient-user-1 Done:false Important:true}
+Shared Todo 2: {ID:shared-todo-2 Task:Shared Task 2 SharedWith:recipient-user-2 Done:true Important:false}
+Successfully retrieved empty list for user who hasn't shared any todos
+Correctly got error: database error
+    shared_todo_test.go:223: PASS:	GetSharedByMeTodos(string)
+    shared_todo_test.go:223: PASS:	GetSharedByMeTodos(string)
+    shared_todo_test.go:223: PASS:	GetSharedByMeTodos(string)
+GetSharedByMeTodos test passed
+--- PASS: TestGetSharedByMeTodos (0.00s)
+=== RUN   TestAddTeamMember
+
+RUNNING TEST: TestAddTeamMember
+Testing adding a member to a team
+Successfully added team member
+Correctly got error for non-existent user: user not found
+Correctly got error for non-existent team: team not found
+Correctly got error for non-admin: only admin can add members
+Correctly got error for already a member: user is already a member of this team
+    team_member_test.go:66: PASS:	AddTeamMember(string,string,string)
+    team_member_test.go:66: PASS:	AddTeamMember(string,string,string)
+    team_member_test.go:66: PASS:	AddTeamMember(string,string,string)
+    team_member_test.go:66: PASS:	AddTeamMember(string,string,string)
+    team_member_test.go:66: PASS:	AddTeamMember(string,string,string)
+AddTeamMember test passed
+--- PASS: TestAddTeamMember (0.00s)
+=== RUN   TestGetTeamMembers
+
+RUNNING TEST: TestGetTeamMembers
+Testing retrieving members of a team
+Retrieved 2 team members
+Member 1: {ID:user-1 Username:testuser1 IsAdmin:true}
+Member 2: {ID:user-2 Username:testuser2 IsAdmin:false}
+Successfully retrieved empty members list for team with no members
+Correctly got error for non-existent team: team not found
+    team_member_test.go:127: PASS:	GetTeamMembers(string)
+    team_member_test.go:127: PASS:	GetTeamMembers(string)
+    team_member_test.go:127: PASS:	GetTeamMembers(string)
+GetTeamMembers test passed
+--- PASS: TestGetTeamMembers (0.00s)
+=== RUN   TestRemoveTeamMember
+
+RUNNING TEST: TestRemoveTeamMember
+Testing removing a member from a team
+Successfully removed team member
+Correctly got error for removing team admin: cannot remove the team admin
+Correctly got error for non-existent team: team not found
+Correctly got error for non-member: user is not a member of this team
+    team_member_test.go:175: PASS:	RemoveTeamMember(string,string)
+    team_member_test.go:175: PASS:	RemoveTeamMember(string,string)
+    team_member_test.go:175: PASS:	RemoveTeamMember(string,string)
+    team_member_test.go:175: PASS:	RemoveTeamMember(string,string)
+RemoveTeamMember test passed
+--- PASS: TestRemoveTeamMember (0.00s)
+=== RUN   TestCreateTeam
+
+RUNNING TEST: TestCreateTeam
+Testing creating a new team
+Created team: {ID:team-1 Name:Test Team AdminID:admin-123}
+Correctly got error for duplicate team name: team name already exists
+    team_test.go:51: PASS:	CreateTeam(string,string,string)
+    team_test.go:51: PASS:	CreateTeam(string,string,string)
+CreateTeam test passed
+--- PASS: TestCreateTeam (0.00s)
+=== RUN   TestJoinTeam
+
+RUNNING TEST: TestJoinTeam
+Testing joining an existing team
+Successfully joined team
+Correctly got error for non-existent team: team not found
+Correctly got error for incorrect password: incorrect password
+Correctly got error for already a member: user is already a member of this team
+    team_test.go:99: PASS:	JoinTeam(string,string,string)
+    team_test.go:99: PASS:	JoinTeam(string,string,string)
+    team_test.go:99: PASS:	JoinTeam(string,string,string)
+    team_test.go:99: PASS:	JoinTeam(string,string,string)
+JoinTeam test passed
+--- PASS: TestJoinTeam (0.00s)
+=== RUN   TestGetTeams
+
+RUNNING TEST: TestGetTeams
+Testing retrieving teams for a user
+Retrieved 2 teams
+Team 1: {ID:team-1 Name:Team One AdminID:admin-123}
+Team 2: {ID:team-2 Name:Team Two AdminID:user-123}
+Successfully retrieved empty teams list for user with no teams
+Correctly got error: database error
+    team_test.go:159: PASS:	GetTeams(string)
+    team_test.go:159: PASS:	GetTeams(string)
+    team_test.go:159: PASS:	GetTeams(string)
+GetTeams test passed
+--- PASS: TestGetTeams (0.00s)
+=== RUN   TestGetTeamByID
+
+RUNNING TEST: TestGetTeamByID
+Testing retrieving a team by ID
+Retrieved team: {ID:team-1 Name:Test Team AdminID:admin-123}
+Correctly got error for non-existent team: team not found
+    team_test.go:199: PASS:	GetTeamByID(string)
+    team_test.go:199: PASS:	GetTeamByID(string)
+GetTeamByID test passed
+--- PASS: TestGetTeamByID (0.00s)
+=== RUN   TestCreateTeamTodo
+
+RUNNING TEST: TestCreateTeamTodo
+Testing creating a new team todo
+Created team todo with ID: team-todo-1
+Team todo details: {Task:Team Task Description:Team Description Done:false Important:true TeamID:team-1 AssignedTo:user-123}
+Correctly got error: team not found
+    team_todo_test.go:67: PASS:	CreateTeamTodo(string,string,bool,string,string)
+    team_todo_test.go:67: PASS:	CreateTeamTodo(string,string,bool,string,string)
+CreateTeamTodo test passed
+--- PASS: TestCreateTeamTodo (0.00s)
+=== RUN   TestGetTeamTodos
+
+RUNNING TEST: TestGetTeamTodos
+Testing retrieving todos for a team
+Retrieved 2 team todos
+Team Todo 1: {ID:team-todo-1 Task:Team Task 1 AssignedTo:user-123 Done:false Important:true}
+Team Todo 2: {ID:team-todo-2 Task:Team Task 2 AssignedTo:user-456 Done:true Important:false}
+Successfully retrieved empty todo list for team with no todos
+Correctly got error for invalid team: team not found
+    team_todo_test.go:145: PASS:	GetTeamTodos(string)
+    team_todo_test.go:145: PASS:	GetTeamTodos(string)
+    team_todo_test.go:145: PASS:	GetTeamTodos(string)
+GetTeamTodos test passed
+--- PASS: TestGetTeamTodos (0.00s)
+=== RUN   TestUpdateTeamTodo
+
+RUNNING TEST: TestUpdateTeamTodo
+Testing updating a team todo
+Updated team todo: {ID:team-todo-1 Task:Updated Task Description:Updated Description Done:true Important:false AssignedTo:user-456}
+Correctly got error for non-existent team todo: team todo not found
+Correctly got error for invalid team: team not found
+    team_todo_test.go:210: PASS:	UpdateTeamTodo(string,string,string,bool,bool,string,string)
+    team_todo_test.go:210: PASS:	UpdateTeamTodo(string,string,string,bool,bool,string,string)
+    team_todo_test.go:210: PASS:	UpdateTeamTodo(string,string,string,bool,bool,string,string)
+UpdateTeamTodo test passed
+--- PASS: TestUpdateTeamTodo (0.00s)
+=== RUN   TestDeleteTeamTodo
+
+RUNNING TEST: TestDeleteTeamTodo
+Testing deleting a team todo
+Team todo successfully deleted
+Correctly got error for non-existent team todo: team todo not found
+Correctly got error for invalid team: team not found
+    team_todo_test.go:247: PASS:	DeleteTeamTodo(string,string)
+    team_todo_test.go:247: PASS:	DeleteTeamTodo(string,string)
+    team_todo_test.go:247: PASS:	DeleteTeamTodo(string,string)
+DeleteTeamTodo test passed
+--- PASS: TestDeleteTeamTodo (0.00s)
+=== RUN   TestGetTodos
+
+RUNNING TEST: TestGetTodos
+Testing getting todos for the user
+Retrieved 2 todos as expected
+Todo 1: {ID:todo-1 Task:Test Task 1 Description:Test Description 1 Done:false Important:true}
+Todo 2: {ID:todo-2 Task:Test Task 2 Description:Test Description 2 Done:true Important:false}
+Successfully retrieved empty todo list for user with no todos
+Correctly got error: database error
+    todo_test.go:87: PASS:	GetTodos(string)
+    todo_test.go:87: PASS:	GetTodos(string)
+    todo_test.go:87: PASS:	GetTodos(string)
+GetTodos test passed
+--- PASS: TestGetTodos (0.00s)
+=== RUN   TestCreateTodo
+
+RUNNING TEST: TestCreateTodo
+Testing creating a new todo
+Created todo with ID: new-todo-id
+Todo details: {Task:Test Task Description:Test Description Done:false Important:true UserID:user-123}
+Correctly got error: failed to create todo
+    todo_test.go:146: PASS:	CreateTodo(string,string,bool,string)
+    todo_test.go:146: PASS:	CreateTodo(string,string,bool,string)
+CreateTodo test passed
+--- PASS: TestCreateTodo (0.00s)
+=== RUN   TestUpdateTodo
+
+RUNNING TEST: TestUpdateTodo
+Testing updating an existing todo
+Updated todo: {ID:todo-1 Task:Updated Task Description:Updated Description Done:true Important:false}
+Correctly got error for non-existent todo: todo not found
+    todo_test.go:199: PASS:	UpdateTodo(string,string,string,bool,bool,string)
+    todo_test.go:199: PASS:	UpdateTodo(string,string,string,bool,bool,string)
+UpdateTodo test passed
+--- PASS: TestUpdateTodo (0.00s)
+=== RUN   TestDeleteTodo
+
+RUNNING TEST: TestDeleteTodo
+Testing deleting a todo
+Todo was successfully deleted
+Correctly got error for non-existent todo: todo not found
+Correctly got error for unauthorized deletion: unauthorized
+    todo_test.go:236: PASS:	DeleteTodo(string,string)
+    todo_test.go:236: PASS:	DeleteTodo(string,string)
+    todo_test.go:236: PASS:	DeleteTodo(string,string)
+DeleteTodo test passed
+--- PASS: TestDeleteTodo (0.00s)
+=== RUN   TestUndoTodo
+
+RUNNING TEST: TestUndoTodo
+Testing undoing a completed todo
+Undone todo: {ID:todo-1 Task:Test Task Done:false}
+Correctly got error for non-existent todo: todo not found
+    todo_test.go:286: PASS:	UndoTodo(string,string)
+    todo_test.go:286: PASS:	UndoTodo(string,string)
+UndoTodo test passed
+--- PASS: TestUndoTodo (0.00s)
+PASS
+ok  	github.com/its-AbhaySahani/Todo-app-Using-Go-React/UnitTestCases/unit	(cached)
