@@ -68,7 +68,7 @@ OLDserver/
 
     # Unit Test Cases for Hexagonal Server
     server/
-└── UnitTestCases/
+└── TestCases/
     ├── mocks/
     │   ├── mock_repositories.go   # Mocks for repository interfaces
     │   ├── mock_services.go       # Mocks for service interfaces
@@ -80,14 +80,14 @@ OLDserver/
     │   │   ├── todo_service_test.go
     │   │   ├── team_service_test.go
     │   │   ├── routine_service_test.go
-    │   │   └── shared_todo_service_test.go
+    │   │   └── shared_todo_service_test.go,  etc.
     │   │
     │   └── handlers/
     │       ├── user_handler_test.go
     │       ├── todo_handler_test.go
     │       ├── team_handler_test.go
     │       ├── routine_handler_test.go
-    │       └── shared_todo_handler_test.go
+    │       └── shared_todo_handler_test.go, etc.
     │
     ├── integration/
     │   ├── repository_tests/      # Repository integration tests with test DB

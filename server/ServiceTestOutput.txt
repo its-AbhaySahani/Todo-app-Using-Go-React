@@ -1,0 +1,190 @@
+=== RUN   TestGetSharedTodos
+
+=== RUNNING TEST: TestGetSharedTodos ===
+Testing retrieving todos shared with a user
+Scenario 1: Testing retrieving shared todos for a user
+✅ Successfully retrieved 2 shared todos for user user-123
+   Shared todo details:
+   - Todo 1: {ID: shared-todo-1, Task: Shared Task 1, SharedBy: sender-user-1}
+   - Todo 2: {ID: shared-todo-2, Task: Shared Task 2, SharedBy: sender-user-2}
+
+Scenario 2: Testing retrieving shared todos for a user with no shared todos
+✅ Successfully returned empty list for user with no shared todos
+
+Scenario 3: Testing database error when retrieving shared todos
+✅ Correctly received error: services.shared_todos.SharedTodoService.GetSharedTodos: failed to get shared todos: database error
+    shared_todo_service_test.go:99: PASS:	GetSharedTodos(context.backgroundCtx,string)
+    shared_todo_service_test.go:99: PASS:	GetSharedTodos(context.backgroundCtx,string)
+    shared_todo_service_test.go:99: PASS:	GetSharedTodos(context.backgroundCtx,string)
+✅ All GetSharedTodos test scenarios passed
+--- PASS: TestGetSharedTodos (0.00s)
+=== RUN   TestShareTodo
+
+=== RUNNING TEST: TestShareTodo ===
+Testing sharing a todo with another user
+Scenario 1: Testing successful todo sharing
+✅ Todo todo-123 successfully shared with user recipient-123 by user owner-123
+
+Scenario 2: Testing sharing non-existent todo
+✅ Correctly received error: services.shared_todos.SharedTodoService.ShareTodo: failed to get todo: todo not found
+
+Scenario 3: Testing sharing a todo that user doesn't own
+✅ Correctly received error: services.shared_todos.SharedTodoService.ShareTodo: unauthorized to share this todo
+
+Scenario 4: Testing sharing a todo that is already shared
+✅ Correctly received error: services.shared_todos.SharedTodoService.ShareTodo: todo is already shared with this user
+    shared_todo_service_test.go:196: PASS:	IsSharedWithUser(context.backgroundCtx,string,string)
+    shared_todo_service_test.go:196: PASS:	IsSharedWithUser(context.backgroundCtx,string,string)
+    shared_todo_service_test.go:196: PASS:	ShareTodo(context.backgroundCtx,string,string,string)
+    shared_todo_service_test.go:197: PASS:	GetTodoByID(context.backgroundCtx,string)
+    shared_todo_service_test.go:197: PASS:	GetTodoByID(context.backgroundCtx,string)
+    shared_todo_service_test.go:197: PASS:	GetTodoByID(context.backgroundCtx,string)
+    shared_todo_service_test.go:197: PASS:	GetTodoByID(context.backgroundCtx,string)
+✅ All ShareTodo test scenarios passed
+--- PASS: TestShareTodo (0.00s)
+=== RUN   TestGetSharedByMeTodos
+
+=== RUNNING TEST: TestGetSharedByMeTodos ===
+Testing retrieving todos shared by a user
+Scenario 1: Testing retrieving todos shared by a user
+✅ Successfully retrieved 2 todos shared by user user-123
+   Shared todo details:
+   - Todo 1: {ID: shared-todo-1, Task: Shared Task 1, SharedWith: recipient-user-1}
+   - Todo 2: {ID: shared-todo-2, Task: Shared Task 2, SharedWith: recipient-user-2}
+
+Scenario 2: Testing retrieving shared todos for a user who hasn't shared any
+✅ Successfully returned empty list for user who hasn't shared any todos
+
+Scenario 3: Testing database error when retrieving shared todos
+✅ Correctly received error: services.shared_todos.SharedTodoService.GetSharedByMeTodos: failed to get shared by me todos: database error
+    shared_todo_service_test.go:285: PASS:	GetSharedByMeTodos(context.backgroundCtx,string)
+    shared_todo_service_test.go:285: PASS:	GetSharedByMeTodos(context.backgroundCtx,string)
+    shared_todo_service_test.go:285: PASS:	GetSharedByMeTodos(context.backgroundCtx,string)
+✅ All GetSharedByMeTodos test scenarios passed
+--- PASS: TestGetSharedByMeTodos (0.00s)
+=== RUN   TestCreateTodo
+
+=== RUNNING TEST: TestCreateTodo ===
+Testing todo creation functionality
+Scenario 1: Testing successful todo creation
+✅ Todo created successfully with ID: todo-123
+
+Scenario 2: Testing todo creation with database error
+✅ Correctly received error: services.todos.TodoService.CreateTodo: failed to create todo: database error
+    todo_service_test.go:105: PASS:	CreateTodo(context.backgroundCtx,string,string,bool,bool,string,mock.AnythingOfTypeArgument,mock.AnythingOfTypeArgument)
+    todo_service_test.go:105: PASS:	CreateTodo(context.backgroundCtx,string,string,bool,bool,string,mock.AnythingOfTypeArgument,mock.AnythingOfTypeArgument)
+✅ All CreateTodo test scenarios passed
+--- PASS: TestCreateTodo (0.00s)
+=== RUN   TestGetTodosByUserID
+
+=== RUNNING TEST: TestGetTodosByUserID ===
+Testing retrieving todos for a user
+Scenario 1: Testing retrieving todos for a user with todos
+✅ Successfully retrieved 2 todos for user user-123
+   Todo details:
+   - Todo 1: {ID: todo-1, Task: Task 1, Done: false, Important: true}
+   - Todo 2: {ID: todo-2, Task: Task 2, Done: true, Important: false}
+
+Scenario 2: Testing retrieving todos for a user with no todos
+✅ Successfully returned empty list for user with no todos
+
+Scenario 3: Testing database error when retrieving todos
+✅ Correctly received error: services.todos.TodoService.GetTodosByUserID: failed to get todos by user ID: database error
+    todo_service_test.go:185: PASS:	GetTodosByUserID(context.backgroundCtx,string)
+    todo_service_test.go:185: PASS:	GetTodosByUserID(context.backgroundCtx,string)
+    todo_service_test.go:185: PASS:	GetTodosByUserID(context.backgroundCtx,string)
+✅ All GetTodosByUserID test scenarios passed
+--- PASS: TestGetTodosByUserID (0.00s)
+=== RUN   TestUpdateTodo
+
+=== RUNNING TEST: TestUpdateTodo ===
+Testing todo update functionality
+Scenario 1: Testing successful todo update
+✅ Todo todo-123 updated successfully
+
+Scenario 2: Testing update of non-existent todo
+✅ Correctly received error: services.todos.TodoService.UpdateTodo: failed to update todo: todo not found
+
+Scenario 3: Testing unauthorized update
+✅ Correctly received error: services.todos.TodoService.UpdateTodo: failed to update todo: unauthorized
+    todo_service_test.go:282: PASS:	UpdateTodo(context.backgroundCtx,string,string,string,bool,bool,string)
+    todo_service_test.go:282: PASS:	UpdateTodo(context.backgroundCtx,string,string,string,bool,bool,string)
+    todo_service_test.go:282: PASS:	UpdateTodo(context.backgroundCtx,string,string,string,bool,bool,string)
+✅ All UpdateTodo test scenarios passed
+--- PASS: TestUpdateTodo (0.00s)
+=== RUN   TestDeleteTodo
+
+=== RUNNING TEST: TestDeleteTodo ===
+Testing todo deletion functionality
+Scenario 1: Testing successful todo deletion
+✅ Todo todo-123 deleted successfully
+
+Scenario 2: Testing deletion of non-existent todo
+✅ Correctly received error: services.todos.TodoService.DeleteTodo: failed to delete todo: todo not found
+
+Scenario 3: Testing unauthorized deletion
+✅ Correctly received error: services.todos.TodoService.DeleteTodo: failed to delete todo: unauthorized
+    todo_service_test.go:336: PASS:	DeleteTodo(context.backgroundCtx,string,string)
+    todo_service_test.go:336: PASS:	DeleteTodo(context.backgroundCtx,string,string)
+    todo_service_test.go:336: PASS:	DeleteTodo(context.backgroundCtx,string,string)
+✅ All DeleteTodo test scenarios passed
+--- PASS: TestDeleteTodo (0.00s)
+=== RUN   TestUndoTodo
+
+=== RUNNING TEST: TestUndoTodo ===
+Testing todo undo functionality
+Scenario 1: Testing successful todo undo
+✅ Todo todo-123 undone successfully
+
+Scenario 2: Testing undo of non-existent todo
+✅ Correctly received error: services.todos.TodoService.UndoTodo: failed to undo todo: todo not found
+
+Scenario 3: Testing unauthorized undo
+✅ Correctly received error: services.todos.TodoService.UndoTodo: failed to undo todo: unauthorized
+    todo_service_test.go:390: PASS:	UndoTodo(context.backgroundCtx,string,string)
+    todo_service_test.go:390: PASS:	UndoTodo(context.backgroundCtx,string,string)
+    todo_service_test.go:390: PASS:	UndoTodo(context.backgroundCtx,string,string)
+✅ All UndoTodo test scenarios passed
+--- PASS: TestUndoTodo (0.00s)
+=== RUN   TestCreateUser
+
+=== RUNNING TEST: TestCreateUser ===
+Testing user creation functionality
+Scenario 1: Testing successful user creation
+✅ User created successfully with ID: user-123
+
+Scenario 2: Testing user creation with duplicate username
+✅ Correctly received error: services.users.UserService.CreateUser: failed to create user: username already exists
+    user_service_test.go:66: PASS:	CreateUser(context.backgroundCtx,string,mock.AnythingOfTypeArgument)
+    user_service_test.go:66: PASS:	CreateUser(context.backgroundCtx,string,mock.AnythingOfTypeArgument)
+✅ All CreateUser test scenarios passed
+--- PASS: TestCreateUser (0.12s)
+=== RUN   TestGetUserByUsername
+
+=== RUNNING TEST: TestGetUserByUsername ===
+Testing retrieving user by username
+Scenario 1: Testing retrieving an existing user
+✅ Successfully retrieved user: {ID: user-123, Username: testuser}
+
+Scenario 2: Testing retrieving a non-existent user
+✅ Correctly received error: services.users.UserService.GetUserByUsername: failed to get user by username: user not found
+    user_service_test.go:112: PASS:	GetUserByUsername(context.backgroundCtx,string)
+    user_service_test.go:112: PASS:	GetUserByUsername(context.backgroundCtx,string)
+✅ All GetUserByUsername test scenarios passed
+--- PASS: TestGetUserByUsername (0.00s)
+=== RUN   TestVerifyPassword
+
+=== RUNNING TEST: TestVerifyPassword ===
+Testing password verification functionality
+Scenario 1: Testing with correct password
+✅ Password verification successful
+
+Scenario 2: Testing with incorrect password
+✅ Correctly received error for incorrect password: crypto/bcrypt: hashedPassword is not the hash of the given password
+
+Scenario 3: Testing with invalid hash format
+✅ Correctly received error for invalid hash: crypto/bcrypt: hashedSecret too short to be a bcrypted password
+✅ All VerifyPassword test scenarios passed
+--- PASS: TestVerifyPassword (0.00s)
+PASS
+ok  	github.com/its-AbhaySahani/Todo-app-Using-Go-React/TestCases/unit/services	0.132s
