@@ -6,7 +6,7 @@ import (
     "net/http"
     "time"
     "log"
-    
+    "strings"
     "github.com/gorilla/mux"
     "github.com/dgrijalva/jwt-go"
     
@@ -770,4 +770,60 @@ func CreateOrUpdateRoutines(routineService *routines.RoutineService) http.Handle
     }
 }
 
+// In handler/api/api.go
+// ShareTodo handles sharing a todo with another user
+func ShareTodo(sharedTodoService *shared_todos.SharedTodoService, userService *users.UserService, todoService *todos.TodoService) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Content-Type", "application/json")
+        
+        // Parse request body
+        var request struct {
+            TaskId   string `json:"taskId"`
+            Username string `json:"username"`
+        }
+        
+        if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+            http.Error(w, "Invalid request payload", http.StatusBadRequest)
+            return
+        }
+        
+        // Get the current user ID from context
+        currentUserID := r.Context().Value(middleware.UserIDKey).(string)
+        
+        // Find the user by username
+        recipient, err := userService.GetUserByUsername(context.Background(), request.Username)
+        if err != nil {
+            http.Error(w, "User not found", http.StatusNotFound)
+            return
+        }
+        
+        // Cannot share with yourself
+        if recipient.ID == currentUserID {
+            http.Error(w, "Cannot share todo with yourself", http.StatusBadRequest)
+            return
+        }
+        
+        // Share the todo
+        err = sharedTodoService.ShareTodo(context.Background(), request.TaskId, recipient.ID, currentUserID)
+        if err != nil {
+            if strings.Contains(err.Error(), "already shared") {
+                http.Error(w, "Todo is already shared with this user", http.StatusConflict)
+                return
+            }
+            if strings.Contains(err.Error(), "failed to get todo") {
+                http.Error(w, "Todo not found", http.StatusNotFound)
+                return
+            }
+            if strings.Contains(err.Error(), "unauthorized") {
+                http.Error(w, "You can only share your own todos", http.StatusForbidden)
+                return
+            }
+            http.Error(w, "Error sharing todo: "+err.Error(), http.StatusInternalServerError)
+            return
+        }
+        
+        // Return success response
+        json.NewEncoder(w).Encode(map[string]string{"result": "success"})
+    }
+}
 

@@ -38,7 +38,7 @@ func SetupRoutes(router *mux.Router, DB *sql.DB) {
     teamService := teams.NewTeamService(teamRepo)
     teamMemberService := team_members.NewTeamMemberService(teamMemberRepo)
     teamTodoService := team_todos.NewTeamTodoService(teamTodoRepo)
-    sharedTodoService := shared_todos.NewSharedTodoService(sharedTodoRepo)
+    sharedTodoService := shared_todos.NewSharedTodoService(sharedTodoRepo, todoRepo, userRepo)
     routineService := routines.NewRoutineService(routineRepo)
 
     // Setup API v1 routes
@@ -137,6 +137,8 @@ func setupLegacyRoutes(
     apiRouter.HandleFunc("/todo/{id}", api.DeleteTodo(todoService)).Methods("DELETE")
     apiRouter.HandleFunc("/todo/undo/{id}", api.UndoTodo(todoService)).Methods("PUT")
     apiRouter.HandleFunc("/shared", api.GetSharedTodos(sharedTodoService)).Methods("GET")
+    apiRouter.HandleFunc("/share", api.ShareTodo(sharedTodoService, userService, todoService)).Methods("POST")
+
     
     // Team routes
     apiRouter.HandleFunc("/team", api.CreateTeam(teamService)).Methods("POST")

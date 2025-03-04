@@ -71,6 +71,17 @@ func (s *TodoService) CreateTodo(ctx context.Context, req *dto.CreateTodoRequest
     return &dto.CreateResponse{ID: id}, nil
 }
 
+func (s *TodoService) GetTodoByID(ctx context.Context, id string) (*domain.Todo, error) {
+    const functionName = "services.todos.TodoService.GetTodoByID"
+    
+    todo, err := s.repo.GetTodoByID(ctx, id)
+    if err != nil {
+        return nil, fmt.Errorf("%s: failed to get todo by ID: %w", functionName, err)
+    }
+    
+    return todo, nil
+}
+
 func (s *TodoService) GetTodosByUserID(ctx context.Context, userID string) (*dto.TodosResponse, error) {
     const functionName = "services.todos.TodoService.GetTodosByUserID"
     domainTodos, err := s.repo.GetTodosByUserID(ctx, userID)

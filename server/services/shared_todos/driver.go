@@ -4,6 +4,10 @@ import (
 	"github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
 )
 
-func NewSharedTodoService(repo domain.SharedTodoRepository) *SharedTodoService {
-    return &SharedTodoService{repo: repo}
+func NewSharedTodoService(repo domain.SharedTodoRepository, todoRepo domain.TodoRepository, userRepo domain.UserRepository) *SharedTodoService {
+    return &SharedTodoService{
+        repo:     repo,
+        todoRepo: todoRepo,
+        userRepo: userRepo,
+    }
 }

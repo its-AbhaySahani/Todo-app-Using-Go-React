@@ -11,6 +11,43 @@ import (
 
 type SharedTodoService struct {
     repo domain.SharedTodoRepository
+    todoRepo domain.TodoRepository
+    userRepo domain.UserRepository
+}
+
+
+// ShareTodo shares a todo with another user
+func (s *SharedTodoService) ShareTodo(ctx context.Context, todoID string, recipientUserID string, sharedBy string) error {
+    const functionName = "services.shared_todos.SharedTodoService.ShareTodo"
+    
+    // Get the original todo to make sure it exists and belongs to the current user
+    todo, err := s.todoRepo.GetTodoByID(ctx, todoID)
+    if err != nil {
+        return fmt.Errorf("%s: failed to get todo: %w", functionName, err)
+    }
+    
+    // Verify the todo belongs to the current user
+    if todo.UserID != sharedBy {
+        return fmt.Errorf("%s: unauthorized to share this todo", functionName)
+    }
+    
+    // Check if the todo is already shared with this user
+    isShared, err := s.repo.IsSharedWithUser(ctx, todoID, recipientUserID)
+    if err != nil {
+        return fmt.Errorf("%s: failed to check if todo is shared: %w", functionName, err)
+    }
+    
+    if isShared {
+        return fmt.Errorf("%s: todo is already shared with this user", functionName)
+    }
+    
+    // Share the todo
+    err = s.repo.ShareTodo(ctx, todoID, recipientUserID, sharedBy)
+    if err != nil {
+        return fmt.Errorf("%s: failed to share todo: %w", functionName, err)
+    }
+    
+    return nil
 }
 
 // In server/services/shared_todos/shared_todo_service.go

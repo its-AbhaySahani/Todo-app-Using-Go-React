@@ -18,6 +18,10 @@ type Todo struct {
 
 // TodoRepository defines the interface for todo persistence operations
 type TodoRepository interface {
+    // Add this method if it doesn't exist
+    GetTodoByID(ctx context.Context, id string) (*Todo, error)
+    
+    // Existing methods
     CreateTodo(ctx context.Context, task, description string, done, important bool, userID string, date, time time.Time) (string, error)
     GetTodosByUserID(ctx context.Context, userID string) ([]Todo, error)
     UpdateTodo(ctx context.Context, id, task, description string, done, important bool, userID string) (bool, error)

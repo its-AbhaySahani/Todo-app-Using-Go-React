@@ -16,9 +16,9 @@ var _ domain.TodoRepository = (*TodoRepository)(nil)
 
 type TodoRepository struct {
     querier *db.Queries
+    db      *sql.DB
 }
 
-// Implement domain.TodoRepository interface methods
 // In server/persistent/todos_repository/todos_persistent.go
 func (r *TodoRepository) CreateTodo(ctx context.Context, task, description string, done, important bool, userID string, date, todoTime time.Time) (string, error) {
     id := uuid.New().String()
@@ -58,6 +58,58 @@ func (r *TodoRepository) CreateTodo(ctx context.Context, task, description strin
     
     return id, nil
 }   
+
+func (r *TodoRepository) GetTodoByID(ctx context.Context, id string) (*domain.Todo, error) {
+    // Using a query to get a todo by ID
+    var task string
+    var description sql.NullString
+    var done bool
+    var important bool
+    var userID sql.NullString
+    var date sql.NullString
+    var timeValue sql.NullString
+    
+    err := r.db.QueryRowContext(ctx, "SELECT task, description, done, important, user_id, CAST(date AS CHAR), CAST(time AS CHAR) FROM todos WHERE id = ?", id).
+        Scan(&task, &description, &done, &important, &userID, &date, &timeValue)
+    
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return nil, fmt.Errorf("todo not found")
+        }
+        return nil, err
+    }
+    
+    // Parse date
+    var dateTime time.Time
+    if date.Valid {
+        parsedDate, err := time.Parse("2006-01-02", date.String)
+        if err == nil {
+            dateTime = parsedDate
+        }
+    }
+    
+    // Parse time
+    var timeVal time.Time
+    if timeValue.Valid {
+        parsedTime, err := time.Parse("15:04:05", timeValue.String)
+        if err == nil {
+            // Use a valid year for the time
+            hour, min, sec := parsedTime.Clock()
+            timeVal = time.Date(2000, 1, 1, hour, min, sec, 0, time.UTC)
+        }
+    }
+    
+    return &domain.Todo{
+        ID:          id,
+        Task:        task,
+        Description: description.String,
+        Done:        done,
+        Important:   important,
+        UserID:      userID.String,
+        Date:        dateTime,
+        Time:        timeVal,
+    }, nil
+}
 
 func (r *TodoRepository) GetTodosByUserID(ctx context.Context, userID string) ([]domain.Todo, error) {
     todos, err := r.querier.GetTodosByUserID(ctx, sql.NullString{String: userID, Valid: true})

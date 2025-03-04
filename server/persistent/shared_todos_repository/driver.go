@@ -7,6 +7,9 @@ import (
 )
 
 func NewSharedTodoRepository(DB *sql.DB) *SharedTodoRepository {
-	querier := db.New(DB)
-	return &SharedTodoRepository{querier: querier}
+    querier := db.New(DB)
+    return &SharedTodoRepository{
+        querier: querier,
+        db:      DB,  // Store DB connection
+    }
 }

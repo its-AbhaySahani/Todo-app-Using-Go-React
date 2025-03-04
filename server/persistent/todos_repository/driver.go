@@ -7,5 +7,8 @@ import (
 
 func NewTodoRepository(DB *sql.DB) *TodoRepository {
     querier := db.New(DB)
-    return &TodoRepository{querier: querier}
+    return &TodoRepository{
+        querier: querier,
+        db:      DB,  // Store DB connection
+    }
 }
