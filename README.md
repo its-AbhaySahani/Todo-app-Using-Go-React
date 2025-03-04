@@ -65,3 +65,35 @@ OLDserver/
 
 
     go test -v ./UnitTestCases/unit/...
+
+    # Unit Test Cases for Hexagonal Server
+    server/
+└── UnitTestCases/
+    ├── mocks/
+    │   ├── mock_repositories.go   # Mocks for repository interfaces
+    │   ├── mock_services.go       # Mocks for service interfaces
+    │   └── mock_external.go       # Mocks for external dependencies (e.g., DB, HTTP clients)
+    │
+    ├── unit/
+    │   ├── services/
+    │   │   ├── user_service_test.go
+    │   │   ├── todo_service_test.go
+    │   │   ├── team_service_test.go
+    │   │   ├── routine_service_test.go
+    │   │   └── shared_todo_service_test.go
+    │   │
+    │   └── handlers/
+    │       ├── user_handler_test.go
+    │       ├── todo_handler_test.go
+    │       ├── team_handler_test.go
+    │       ├── routine_handler_test.go
+    │       └── shared_todo_handler_test.go
+    │
+    ├── integration/
+    │   ├── repository_tests/      # Repository integration tests with test DB
+    │   └── api_tests/             # End-to-end API tests
+    │
+    └── utils/                     # Test utilities
+        ├── test_fixtures.go       # Test data generators
+        ├── http_test_helpers.go   # HTTP test utilities
+        └── setup_test.go          # Common test setup code

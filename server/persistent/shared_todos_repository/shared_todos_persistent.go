@@ -3,7 +3,8 @@ package shared_todos_repository
 import (
     "context"
     "database/sql"
-    
+    "time"
+    "github.com/google/uuid"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models/db"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/dto"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
@@ -18,22 +19,29 @@ type SharedTodoRepository struct {
 
 // Implement domain.SharedTodoRepository interface methods
 func (r *SharedTodoRepository) CreateSharedTodo(ctx context.Context, task, description string, done, important bool, userID, sharedBy string) (string, error) {
-    // Use your existing DTO and converter
-    req := &dto.CreateSharedTodoRequest{
-        Task:        task,
-        Description: description,
-        Done:        done,
-        Important:   important,
-        UserID:      userID,
-        SharedBy:    sharedBy,
-    }
+    id := uuid.New().String()
     
-    params := req.ConvertCreateSharedTodoDomainRequestToPersistentRequest()
-    err := r.querier.CreateSharedTodo(ctx, *params)
+    // Use current date and time if none provided
+    nullDate := sql.NullTime{Time: time.Now(), Valid: true}
+    nullTime := sql.NullTime{Time: time.Now(), Valid: true}
+    
+    err := r.querier.CreateSharedTodo(ctx, db.CreateSharedTodoParams{
+        ID:          id,
+        Task:        sql.NullString{String: task, Valid: true},
+        Description: sql.NullString{String: description, Valid: true},
+        Done:        sql.NullBool{Bool: done, Valid: true},
+        Important:   sql.NullBool{Bool: important, Valid: true},
+        UserID:      sql.NullString{String: userID, Valid: true},
+        Date:        nullDate,
+        Time:        nullTime,
+        SharedBy:    sql.NullString{String: sharedBy, Valid: true},
+    })
+    
     if err != nil {
         return "", err
     }
-    return params.ID, nil
+    
+    return id, nil
 }
 
 func (r *SharedTodoRepository) GetSharedTodos(ctx context.Context, userID string) ([]domain.SharedTodo, error) {
@@ -111,3 +119,4 @@ func (r *SharedTodoRepository) GetSharedByMeTodosWithDTO(ctx context.Context, sh
     }
     return dto.NewSharedTodosResponse(todos), nil
 }
+

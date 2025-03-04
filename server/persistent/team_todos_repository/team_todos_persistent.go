@@ -2,7 +2,9 @@ package team_todos_repository
 
 import (
     "context"
-    
+    "database/sql"
+    "time"
+    "github.com/google/uuid"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/models/db"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/dto"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
@@ -17,24 +19,30 @@ type TeamTodoRepository struct {
 
 // Implement domain.TeamTodoRepository interface methods
 func (r *TeamTodoRepository) CreateTeamTodo(ctx context.Context, task, description string, done, important bool, teamID, assignedTo string) (string, error) {
-    // Use your existing DTO and converter
-    req := &dto.CreateTeamTodoRequest{
-        Task:        task,
-        Description: description,
-        Done:        done,
-        Important:   important,
-        TeamID:      teamID,
-        AssignedTo:  assignedTo,
-    }
+    id := uuid.New().String()
     
-    params := req.ConvertCreateTeamTodoDomainRequestToPersistentRequest()
-    err := r.querier.CreateTeamTodo(ctx, *params)
+    // Use current date and time if none provided
+    nullDate := sql.NullTime{Time: time.Now(), Valid: true}
+    nullTime := sql.NullTime{Time: time.Now(), Valid: true}
+    
+    err := r.querier.CreateTeamTodo(ctx, db.CreateTeamTodoParams{
+        ID:          id,
+        Task:        task,
+        Description: sql.NullString{String: description, Valid: true},
+        Done:        done,
+        Important:   sql.NullBool{Bool: important, Valid: true},
+        TeamID:      teamID,
+        AssignedTo:  sql.NullString{String: assignedTo, Valid: true},
+        Date:        nullDate,
+        Time:        nullTime,
+    })
+    
     if err != nil {
         return "", err
     }
-    return params.ID, nil
+    
+    return id, nil
 }
-
 func (r *TeamTodoRepository) GetTeamTodos(ctx context.Context, teamID string) ([]domain.TeamTodo, error) {
     todos, err := r.querier.GetTeamTodos(ctx, teamID)
     if err != nil {

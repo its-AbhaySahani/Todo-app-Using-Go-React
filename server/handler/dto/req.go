@@ -1,17 +1,24 @@
 package dto
 
+import "time"
+
 type CreateUserRequest struct {
     Username string `json:"username"`
     Password string `json:"password"`
     Email    string `json:"email"`
 }
 
+// In server/handler/dto/req.go
 type CreateTodoRequest struct {
-    Task        string `json:"task"`
-    Description string `json:"description"`
-    Important   bool   `json:"important"`
-    UserID      string `json:"userId,omitempty"` // Will be set from context
-    Done        bool   `json:"done"`
+    Task        string    `json:"task"`
+    Description string    `json:"description"`
+    Done        bool      `json:"done"`
+    Important   bool      `json:"important"`
+    UserID      string    `json:"user_id,omitempty"` // Will be set from context
+    Date        time.Time `json:"-"`                 // For internal use
+    Time        time.Time `json:"-"`                 // For internal use
+    DateString  string    `json:"date"`              // For JSON parsing
+    TimeString  string    `json:"time"`              // For JSON parsing
 }
 
 type UpdateTodoRequest struct {
@@ -42,11 +49,16 @@ type JoinTeamRequest struct {
 }
 
 type CreateTeamTodoRequest struct {
-    Task        string `json:"task"`
-    Description string `json:"description"`
-    Important   bool   `json:"important"`
-    TeamID      string `json:"teamId,omitempty"` // Will be set from URL params
-    AssignedTo  string `json:"assignedTo,omitempty"` // Will be set from context
+    Task        string    `json:"task"`
+    Description string    `json:"description"`
+    Done        bool      `json:"done"`
+    Important   bool      `json:"important"`
+    TeamID      string    `json:"team_id,omitempty"`
+    AssignedTo  string    `json:"assigned_to,omitempty"`
+    Date        time.Time `json:"-"`                
+    Time        time.Time `json:"-"`                
+    DateString  string    `json:"date"`              
+    TimeString  string    `json:"time"`              
 }
 
 type UpdateTeamTodoRequest struct {
@@ -100,4 +112,17 @@ type GetDailyRoutinesRequest struct {
 type GetTodayRoutinesRequest struct {
     ScheduleType string `json:"scheduleType"`
     UserID       string `json:"userId,omitempty"` // Will be set from context
+}
+
+type CreateSharedTodoRequest struct {
+    Task        string    `json:"task"`
+    Description string    `json:"description"`
+    Done        bool      `json:"done"`
+    Important   bool      `json:"important"`
+    UserID      string    `json:"user_id,omitempty"` 
+    SharedBy    string    `json:"shared_by,omitempty"`
+    Date        time.Time `json:"-"`                
+    Time        time.Time `json:"-"`                 
+    DateString  string    `json:"date"`              
+    TimeString  string    `json:"time"`             
 }

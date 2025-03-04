@@ -34,6 +34,33 @@ type Claims struct {
     jwt.StandardClaims
 }
 
+// formatTodoResponse formats a todo response with proper date/time strings
+func formatTodoResponse(todo dto.TodoResponse) map[string]interface{} {
+    // Format the date and time to strings
+    dateStr := ""
+    timeStr := ""
+    
+    if !todo.Date.IsZero() {
+        dateStr = todo.Date.Format("2006-01-02")
+    }
+    
+    if !todo.Time.IsZero() {
+        timeStr = todo.Time.Format("15:04:05")
+    }
+    
+    // Create a response object with the formatted date/time
+    return map[string]interface{}{
+        "id":          todo.ID,
+        "task":        todo.Task,
+        "description": todo.Description,
+        "done":        todo.Done,
+        "important":   todo.Important,
+        "user_id":     todo.UserID,
+        "date":        dateStr,
+        "time":        timeStr,
+    }
+}
+
 // Register handles user registration
 func Register(userService *users.UserService) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
@@ -101,7 +128,6 @@ func Login(userService *users.UserService) http.HandlerFunc {
 }
 
 // Todo Handlers
-
 func GetTodos(todoService *todos.TodoService) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", "application/json")
@@ -110,22 +136,44 @@ func GetTodos(todoService *todos.TodoService) http.HandlerFunc {
         
         todosResponse, err := todoService.GetTodosByUserID(context.Background(), userID)
         if err != nil {
-            log.Printf("Error getting todos: %v", err) // Add logging to help debug
+            log.Printf("Error getting todos: %v", err)
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
         }
         
-        // Format the date and time as strings for the client
-        for i := range todosResponse.Todos {
-            if !todosResponse.Todos[i].Date.IsZero() {
-                todosResponse.Todos[i].Date = todosResponse.Todos[i].Date.UTC()
+        // Format all todos with proper date/time strings
+        formattedTodos := make([]map[string]interface{}, len(todosResponse.Todos))
+        for i, todo := range todosResponse.Todos {
+            dateStr := ""
+            timeStr := ""
+            
+            if !todo.Date.IsZero() {
+                dateStr = todo.Date.Format("2006-01-02")
+            } else {
+                // Set today's date as default if missing
+                dateStr = time.Now().Format("2006-01-02")
             }
-            if !todosResponse.Todos[i].Time.IsZero() {
-                todosResponse.Todos[i].Time = todosResponse.Todos[i].Time.UTC()
+            
+            if !todo.Time.IsZero() {
+                timeStr = todo.Time.Format("15:04:05")
+            } else {
+                // Set current time as default if missing
+                timeStr = time.Now().Format("15:04:05")
+            }
+            
+            formattedTodos[i] = map[string]interface{}{
+                "id":          todo.ID,
+                "task":        todo.Task,
+                "description": todo.Description,
+                "done":        todo.Done,
+                "important":   todo.Important,
+                "user_id":     todo.UserID,
+                "date":        dateStr,
+                "time":        timeStr,
             }
         }
         
-        json.NewEncoder(w).Encode(todosResponse.Todos)
+        json.NewEncoder(w).Encode(formattedTodos)
     }
 }
 
@@ -143,16 +191,36 @@ func CreateTodo(todoService *todos.TodoService) http.HandlerFunc {
         userID := r.Context().Value(middleware.UserIDKey).(string)
         req.UserID = userID
         
+        // Parse date if provided as string
+        if req.DateString != "" {
+            parsedDate, err := time.Parse("2006-01-02", req.DateString)
+            if err != nil {
+                http.Error(w, "Invalid date format. Use YYYY-MM-DD", http.StatusBadRequest)
+                return
+            }
+            req.Date = parsedDate
+        }
+        
+        // Parse time if provided as string
+        if req.TimeString != "" {
+            parsedTime, err := time.Parse("15:04:05", req.TimeString)
+            if err != nil {
+                http.Error(w, "Invalid time format. Use HH:MM:SS", http.StatusBadRequest)
+                return
+            }
+            req.Time = parsedTime
+        }
+        
         res, err := todoService.CreateTodo(context.Background(), &req)
         if err != nil {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
         }
         
+        w.WriteHeader(http.StatusCreated)
         json.NewEncoder(w).Encode(res)
     }
 }
-
 func UpdateTodo(todoService *todos.TodoService) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         w.Header().Set("Content-Type", "application/json")
@@ -340,9 +408,37 @@ func GetTeamTodos(teamTodoService *team_todos.TeamTodoService) http.HandlerFunc 
             return
         }
         
-        json.NewEncoder(w).Encode(res)
+        // Format team todos with proper date/time strings
+        formattedTodos := make([]map[string]interface{}, len(res.Todos))
+        for i, todo := range res.Todos {
+            dateStr := ""
+            timeStr := ""
+            
+            if !todo.Date.IsZero() {
+                dateStr = todo.Date.Format("2006-01-02")
+            }
+            
+            if !todo.Time.IsZero() {
+                timeStr = todo.Time.Format("15:04:05")
+            }
+            
+            formattedTodos[i] = map[string]interface{}{
+                "id":          todo.ID,
+                "task":        todo.Task,
+                "description": todo.Description,
+                "done":        todo.Done,
+                "important":   todo.Important,
+                "team_id":     todo.TeamID,
+                "assigned_to": todo.AssignedTo,
+                "date":        dateStr,
+                "time":        timeStr,
+            }
+        }
+        
+        json.NewEncoder(w).Encode(formattedTodos)
     }
 }
+
 
 func CreateTeamTodo(teamTodoService *team_todos.TeamTodoService) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
@@ -580,7 +676,33 @@ func GetDailyRoutines(routineService *routines.RoutineService) http.HandlerFunc 
             return
         }
         
-        json.NewEncoder(w).Encode(res.Todos)
+        // Format todos with proper date/time strings
+        formattedTodos := make([]map[string]interface{}, len(res.Todos))
+        for i, todo := range res.Todos {
+            dateStr := ""
+            timeStr := ""
+            
+            if !todo.Date.IsZero() {
+                dateStr = todo.Date.Format("2006-01-02")
+            }
+            
+            if !todo.Time.IsZero() {
+                timeStr = todo.Time.Format("15:04:05")
+            }
+            
+            formattedTodos[i] = map[string]interface{}{
+                "id":          todo.ID,
+                "task":        todo.Task,
+                "description": todo.Description,
+                "done":        todo.Done,
+                "important":   todo.Important,
+                "user_id":     todo.UserID,
+                "date":        dateStr,
+                "time":        timeStr,
+            }
+        }
+        
+        json.NewEncoder(w).Encode(formattedTodos)
     }
 }
 
@@ -647,3 +769,5 @@ func CreateOrUpdateRoutines(routineService *routines.RoutineService) http.Handle
         json.NewEncoder(w).Encode(res)
     }
 }
+
+

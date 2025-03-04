@@ -9,12 +9,16 @@ import (
 
 // Shared Todos
 type CreateSharedTodoRequest struct {
-    Task        string `json:"task"`
-    Description string `json:"description"`
-    Done        bool   `json:"done"`
-    Important   bool   `json:"important"`
-    UserID      string `json:"user_id"`
-    SharedBy    string `json:"shared_by"`
+    Task        string    `json:"task"`
+    Description string    `json:"description"`
+    Done        bool      `json:"done"`
+    Important   bool      `json:"important"`
+    UserID      string    `json:"user_id,omitempty"` 
+    SharedBy    string    `json:"shared_by,omitempty"`
+    Date        time.Time `json:"-"`                
+    Time        time.Time `json:"-"`                 
+    DateString  string    `json:"date"`              
+    TimeString  string    `json:"time"`             
 }
 
 func (req *CreateSharedTodoRequest) ConvertCreateSharedTodoDomainRequestToPersistentRequest() *db.CreateSharedTodoParams {
@@ -49,12 +53,16 @@ func (req *AddTeamMemberRequest) ConvertAddTeamMemberDomainRequestToPersistentRe
 
 // Team Todos
 type CreateTeamTodoRequest struct {
-    Task        string `json:"task"`
-    Description string `json:"description"`
-    Done        bool   `json:"done"`
-    Important   bool   `json:"important"`
-    TeamID      string `json:"team_id"`
-    AssignedTo  string `json:"assigned_to"`
+    Task        string    `json:"task"`
+    Description string    `json:"description"`
+    Done        bool      `json:"done"`
+    Important   bool      `json:"important"`
+    TeamID      string    `json:"team_id,omitempty"`
+    AssignedTo  string    `json:"assigned_to,omitempty"`
+    Date        time.Time `json:"-"`                
+    Time        time.Time `json:"-"`                
+    DateString  string    `json:"date"`              
+    TimeString  string    `json:"time"`              
 }
 
 func (req *CreateTeamTodoRequest) ConvertCreateTeamTodoDomainRequestToPersistentRequest() *db.CreateTeamTodoParams {
@@ -110,12 +118,17 @@ func (req *CreateTeamRequest) ConvertCreateTeamDomainRequestToPersistentRequest(
 }
 
 // Todos
+// In server/persistent/dto/req.go
 type CreateTodoRequest struct {
-    Task        string `json:"task"`
-    Description string `json:"description"`
-    Done        bool   `json:"done"`
-    Important   bool   `json:"important"`
-    UserID      string `json:"user_id"`
+    Task        string    `json:"task"`
+    Description string    `json:"description"`
+    Done        bool      `json:"done"`
+    Important   bool      `json:"important"`
+    UserID      string    `json:"user_id"`
+    Date        time.Time `json:"-"`        // For internal use
+    Time        time.Time `json:"-"`        // For internal use
+    DateString  string    `json:"date"`     // For JSON parsing
+    TimeString  string    `json:"time"`     // For JSON parsing
 }
 
 func (req *CreateTodoRequest) ConvertCreateTodoDomainRequestToPersistentRequest() *db.CreateTodoParams {

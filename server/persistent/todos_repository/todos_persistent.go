@@ -7,6 +7,7 @@ import (
     "time"
     "fmt"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/dto"
+    "github.com/google/uuid"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
 )
 
@@ -18,23 +19,45 @@ type TodoRepository struct {
 }
 
 // Implement domain.TodoRepository interface methods
-func (r *TodoRepository) CreateTodo(ctx context.Context, task, description string, done, important bool, userID string) (string, error) {
-    // Use your existing DTO and converter
-    req := &dto.CreateTodoRequest{
-        Task:        task,
-        Description: description,
-        Done:        done,
-        Important:   important,
-        UserID:      userID,
+// In server/persistent/todos_repository/todos_persistent.go
+func (r *TodoRepository) CreateTodo(ctx context.Context, task, description string, done, important bool, userID string, date, todoTime time.Time) (string, error) {
+    id := uuid.New().String()
+    
+    // Ensure the date is valid
+    var nullDate sql.NullTime
+    if date.IsZero() || date.Year() < 1 || date.Year() > 9999 {
+        nullDate = sql.NullTime{Time: time.Now(), Valid: true}
+    } else {
+        nullDate = sql.NullTime{Time: date, Valid: true}
     }
     
-    params := req.ConvertCreateTodoDomainRequestToPersistentRequest()
-    err := r.querier.CreateTodo(ctx, *params)
+    // Ensure the time is valid
+    var nullTime sql.NullTime
+    if todoTime.IsZero() || todoTime.Year() < 1 || todoTime.Year() > 9999 {
+        now := time.Now()
+        validTime := time.Date(2000, 1, 1, now.Hour(), now.Minute(), now.Second(), 0, time.UTC)
+        nullTime = sql.NullTime{Time: validTime, Valid: true}
+    } else {
+        nullTime = sql.NullTime{Time: todoTime, Valid: true}
+    }
+    
+    err := r.querier.CreateTodo(ctx, db.CreateTodoParams{
+        ID:          id,
+        Task:        task,
+        Description: sql.NullString{String: description, Valid: true},
+        Done:        done,
+        Important:   important,
+        UserID:      sql.NullString{String: userID, Valid: true},
+        Date:        nullDate,
+        Time:        nullTime,
+    })
+    
     if err != nil {
         return "", err
     }
-    return params.ID, nil
-}
+    
+    return id, nil
+}   
 
 func (r *TodoRepository) GetTodosByUserID(ctx context.Context, userID string) ([]domain.Todo, error) {
     todos, err := r.querier.GetTodosByUserID(ctx, sql.NullString{String: userID, Valid: true})

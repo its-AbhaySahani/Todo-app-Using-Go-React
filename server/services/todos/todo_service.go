@@ -3,7 +3,7 @@ package todos
 import (
     "context"
     "fmt"
-    
+    "time"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/domain"
     "github.com/its-AbhaySahani/Todo-app-Using-Go-React/persistent/dto"
 )
@@ -12,9 +12,59 @@ type TodoService struct {
     repo domain.TodoRepository
 }
 
+
 func (s *TodoService) CreateTodo(ctx context.Context, req *dto.CreateTodoRequest) (*dto.CreateResponse, error) {
     const functionName = "services.todos.TodoService.CreateTodo"
-    id, err := s.repo.CreateTodo(ctx, req.Task, req.Description, req.Done, req.Important, req.UserID)
+    
+    // Validate required fields
+    if req.Task == "" {
+        return nil, fmt.Errorf("%s: task cannot be empty", functionName)
+    }
+    
+    // Handle date value
+    date := req.Date
+    if date.IsZero() {
+        // If DateString is provided, parse it
+        if req.DateString != "" {
+            parsedDate, err := time.Parse("2006-01-02", req.DateString)
+            if err == nil {
+                date = parsedDate
+            } else {
+                // If parsing fails, default to today
+                date = time.Now()
+            }
+        } else {
+            // If no date provided at all, default to today
+            date = time.Now()
+        }
+    }
+    
+    // Handle time value
+    timeValue := req.Time
+    if timeValue.IsZero() {
+        if req.TimeString != "" {
+            parsedTime, err := time.Parse("15:04:05", req.TimeString)
+            if err == nil {
+                // Extract just the time parts and use a valid year (e.g., 2000)
+                hour, min, sec := parsedTime.Clock()
+                timeValue = time.Date(2000, 1, 1, hour, min, sec, 0, time.UTC)
+            } else {
+                // If parsing fails, default to current time with a valid year
+                now := time.Now()
+                timeValue = time.Date(2000, 1, 1, now.Hour(), now.Minute(), now.Second(), 0, time.UTC)
+            }
+        } else {
+            // If no time provided, default to current time with a valid year
+            now := time.Now()
+            timeValue = time.Date(2000, 1, 1, now.Hour(), now.Minute(), now.Second(), 0, time.UTC)
+        }
+    } else if timeValue.Year() < 1 {
+        // Ensure the year is valid
+        hour, min, sec := timeValue.Clock()
+        timeValue = time.Date(2000, 1, 1, hour, min, sec, 0, time.UTC)
+    }
+    
+    id, err := s.repo.CreateTodo(ctx, req.Task, req.Description, req.Done, req.Important, req.UserID, date, timeValue)
     if err != nil {
         return nil, fmt.Errorf("%s: failed to create todo: %w", functionName, err)
     }
