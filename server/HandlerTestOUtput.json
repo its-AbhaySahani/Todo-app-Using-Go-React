@@ -1,0 +1,217 @@
+=== RUN   TestGetSharedTodosLogic
+
+=== RUNNING TEST: TestGetSharedTodosLogic ===
+Testing get shared todos logic
+Scenario 1: Testing successful shared todos retrieval
+✅ Successfully retrieved 2 received todos and 2 shared todos
+
+Scenario 2: Testing database error when retrieving shared todos
+✅ Correctly received error: failed to get shared todos: database error
+
+Scenario 3: Testing database error when retrieving shared by me todos
+✅ Correctly received error: failed to get shared-by-me todos: database error
+
+Scenario 4: Testing empty user ID
+✅ Correctly received error: user ID is required
+    shared_todo_handler_test.go:218: PASS:	GetSharedTodos(string,string)
+    shared_todo_handler_test.go:218: PASS:	GetSharedByMeTodos(string,string)
+    shared_todo_handler_test.go:218: PASS:	GetSharedTodos(string,string)
+    shared_todo_handler_test.go:218: PASS:	GetSharedTodos(string,string)
+    shared_todo_handler_test.go:218: PASS:	GetSharedByMeTodos(string,string)
+✅ All GetSharedTodosLogic test scenarios passed
+--- PASS: TestGetSharedTodosLogic (0.00s)
+=== RUN   TestShareTodoLogic
+
+=== RUNNING TEST: TestShareTodoLogic ===
+Testing sharing a todo logic
+Scenario 1: Testing successful todo sharing
+✅ Todo todo-1 successfully shared with user recipient-user
+
+Scenario 2: Testing sharing with non-existent user
+✅ Correctly received error: user not found: user not found
+
+Scenario 3: Testing sharing non-existent todo
+✅ Correctly received error: todo not found: todo not found
+
+Scenario 4: Testing sharing a todo not owned by the user
+✅ Correctly received error: unauthorized: you can only share your own todos
+
+Scenario 5: Testing sharing a todo that is already shared
+✅ Correctly received error: todo already shared with this user
+
+Scenario 6: Testing sharing with empty todo ID
+✅ Correctly received error: todo ID is required
+
+Scenario 7: Testing sharing with empty recipient username
+✅ Correctly received error: recipient username is required
+
+Scenario 8: Testing sharing with empty user ID
+✅ Correctly received error: shared by user ID is required
+    shared_todo_handler_test.go:366: PASS:	ShareTodo(string,string,string,string)
+    shared_todo_handler_test.go:366: PASS:	ShareTodo(string,string,string,string)
+    shared_todo_handler_test.go:367: PASS:	GetUserByUsername(string,string)
+    shared_todo_handler_test.go:367: PASS:	GetUserByUsername(string,string)
+    shared_todo_handler_test.go:368: PASS:	GetTodoByID(string,string)
+    shared_todo_handler_test.go:368: PASS:	GetTodoByID(string,string)
+    shared_todo_handler_test.go:368: PASS:	GetTodoByID(string,string)
+    shared_todo_handler_test.go:368: PASS:	GetTodoByID(string,string)
+✅ All ShareTodoLogic test scenarios passed
+--- PASS: TestShareTodoLogic (0.00s)
+=== RUN   TestGetTodosLogic
+
+=== RUNNING TEST: TestGetTodosLogic ===
+Testing get todos logic
+Scenario 1: Testing successful todos retrieval
+✅ Successfully retrieved 2 todos for user
+
+Scenario 2: Testing database error when retrieving todos
+✅ Correctly received error: database error
+
+Scenario 3: Testing empty user ID
+✅ Correctly received error: user ID is required
+    todo_handler_test.go:158: PASS:	GetTodosByUserID(string,string)
+    todo_handler_test.go:158: PASS:	GetTodosByUserID(string,string)
+✅ All GetTodosLogic test scenarios passed
+--- PASS: TestGetTodosLogic (0.00s)
+=== RUN   TestCreateTodoLogic
+
+=== RUNNING TEST: TestCreateTodoLogic ===
+Testing create todo logic
+Scenario 1: Testing successful todo creation
+✅ Todo created successfully with ID: new-todo-1
+
+Scenario 2: Testing creation with database error
+✅ Correctly received error: database error
+
+Scenario 3: Testing creation with empty task
+✅ Correctly received error: task is required
+    todo_handler_test.go:256: PASS:	CreateTodo(string,mock.argumentMatcher)
+    todo_handler_test.go:256: PASS:	CreateTodo(string,mock.argumentMatcher)
+✅ All CreateTodoLogic test scenarios passed
+--- PASS: TestCreateTodoLogic (0.00s)
+=== RUN   TestUpdateTodoLogic
+
+=== RUNNING TEST: TestUpdateTodoLogic ===
+Testing update todo logic
+Scenario 1: Testing successful todo update
+✅ Todo todo-1 updated successfully
+
+Scenario 2: Testing update of non-existent todo
+✅ Correctly received error: todo not found
+
+Scenario 3: Testing unauthorized update
+✅ Correctly received error: unauthorized
+
+Scenario 4: Testing update with empty ID
+✅ Correctly received error: todo ID is required
+
+Scenario 5: Testing update with empty task
+✅ Correctly received error: task is required
+    todo_handler_test.go:408: PASS:	UpdateTodo(string,mock.argumentMatcher)
+    todo_handler_test.go:408: PASS:	UpdateTodo(string,mock.argumentMatcher)
+    todo_handler_test.go:408: PASS:	UpdateTodo(string,mock.argumentMatcher)
+✅ All UpdateTodoLogic test scenarios passed
+--- PASS: TestUpdateTodoLogic (0.00s)
+=== RUN   TestDeleteTodoLogic
+
+=== RUNNING TEST: TestDeleteTodoLogic ===
+Testing delete todo logic
+Scenario 1: Testing successful todo deletion
+✅ Todo todo-1 deleted successfully
+
+Scenario 2: Testing deletion of non-existent todo
+✅ Correctly received error: todo not found
+
+Scenario 3: Testing unauthorized deletion
+✅ Correctly received error: unauthorized
+
+Scenario 4: Testing deletion with empty todo ID
+✅ Correctly received error: todo ID is required
+
+Scenario 5: Testing deletion with empty user ID
+✅ Correctly received error: user ID is required
+    todo_handler_test.go:483: PASS:	DeleteTodo(string,string,string)
+    todo_handler_test.go:483: PASS:	DeleteTodo(string,string,string)
+    todo_handler_test.go:483: PASS:	DeleteTodo(string,string,string)
+✅ All DeleteTodoLogic test scenarios passed
+--- PASS: TestDeleteTodoLogic (0.00s)
+=== RUN   TestUndoTodoLogic
+
+=== RUNNING TEST: TestUndoTodoLogic ===
+Testing undo todo logic
+Scenario 1: Testing successful todo undoing
+✅ Todo todo-1 undone successfully
+
+Scenario 2: Testing undoing of non-existent todo
+✅ Correctly received error: todo not found
+
+Scenario 3: Testing unauthorized undoing
+✅ Correctly received error: unauthorized
+
+Scenario 4: Testing undoing with empty todo ID
+✅ Correctly received error: todo ID is required
+
+Scenario 5: Testing undoing with empty user ID
+✅ Correctly received error: user ID is required
+    todo_handler_test.go:558: PASS:	UndoTodo(string,string,string)
+    todo_handler_test.go:558: PASS:	UndoTodo(string,string,string)
+    todo_handler_test.go:558: PASS:	UndoTodo(string,string,string)
+✅ All UndoTodoLogic test scenarios passed
+--- PASS: TestUndoTodoLogic (0.00s)
+=== RUN   TestRegisterHandlerLogic
+
+=== RUNNING TEST: TestRegisterHandlerLogic ===
+Testing user registration logic
+Scenario 1: Testing successful user registration
+✅ User registered successfully with ID: user-123
+
+Scenario 2: Testing registration with existing username
+✅ Correctly received error: username already exists
+
+Scenario 3: Testing registration with empty username
+✅ Correctly received error: username and password are required
+    user_handler_test.go:132: PASS:	CreateUser(string,mock.argumentMatcher)
+    user_handler_test.go:132: PASS:	CreateUser(string,mock.argumentMatcher)
+✅ All RegisterHandlerLogic test scenarios passed
+--- PASS: TestRegisterHandlerLogic (0.00s)
+=== RUN   TestLoginHandlerLogic
+
+=== RUNNING TEST: TestLoginHandlerLogic ===
+Testing user login logic
+Scenario 1: Testing successful login
+✅ User logged in successfully, got token and ID: user-123
+
+Scenario 2: Testing login with invalid username
+✅ Correctly received error: user not found
+
+Scenario 3: Testing login with wrong password
+✅ Correctly received error: invalid password
+
+Scenario 4: Testing login with empty credentials
+✅ Correctly received error: username and password are required
+    user_handler_test.go:210: PASS:	GetUserByUsername(string,string)
+    user_handler_test.go:210: PASS:	VerifyPassword(string,string)
+    user_handler_test.go:210: PASS:	GetUserByUsername(string,string)
+    user_handler_test.go:210: PASS:	GetUserByUsername(string,string)
+    user_handler_test.go:210: PASS:	VerifyPassword(string,string)
+✅ All LoginHandlerLogic test scenarios passed
+--- PASS: TestLoginHandlerLogic (0.00s)
+=== RUN   TestGetUserProfileLogic
+
+=== RUNNING TEST: TestGetUserProfileLogic ===
+Testing user profile retrieval logic
+Scenario 1: Testing successful profile retrieval
+✅ Retrieved user profile for: testuser
+
+Scenario 2: Testing profile retrieval for non-existent user
+✅ Correctly received error: user not found
+
+Scenario 3: Testing profile retrieval with empty user ID
+✅ Correctly received error: invalid user ID
+    user_handler_test.go:272: PASS:	GetUserByUsername(string,string)
+    user_handler_test.go:272: PASS:	GetUserByUsername(string,string)
+    user_handler_test.go:272: PASS:	GetUserByUsername(string,string)
+✅ All GetUserProfileLogic test scenarios passed
+--- PASS: TestGetUserProfileLogic (0.00s)
+PASS
+ok  	github.com/its-AbhaySahani/Todo-app-Using-Go-React/TestCases/unit/handlers	(cached)
