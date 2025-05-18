@@ -11,7 +11,7 @@ import (
 var DB *sql.DB
 
 func Connect() {
-    dsn := "Abhay:Abhay@123@tcp(127.0.0.1:3306)/Todo_app"
+    dsn := "root:Abhay@123@tcp(127.0.0.1:3307)/Checkmate"
     db, err := sql.Open("mysql", dsn)
     if err != nil {
         log.Fatal("Error connecting to the database:", err)
